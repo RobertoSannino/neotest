@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,13 +42,33 @@ public class ElasticController {
     }
 
     @GetMapping(path = "/uffici-by-pf-name", produces = MediaType.APPLICATION_JSON_VALUE)
-    List<QRUfficiPf> getUfficiByPfByName(@RequestParam(name = "name") String name, @RequestParam(name = "page") int pageNumber, @RequestParam(name = "results") int numberOfResults) {
+    List<QRUfficiPf> getUfficiByPfByName(@RequestParam(name = "name") String name,
+                                         @RequestParam(name = "searchType") String searchType,
+                                         @RequestParam(name = "page") int pageNumber, @RequestParam(name = "results") int numberOfResults) {
         Pageable pageRequest = PageRequest.of(pageNumber, numberOfResults);
-        List<PfElastic> pfElastics = IterableUtils.toList(elasticRepository.findByDenominazione(name, pageRequest));
+        log.warn("=== INIZIO CHIAMATA ELASTIC ===");
+
+        List<PfElastic> pfElastics = new ArrayList<>();
+        switch (searchType) {
+            case "EXACT":
+                pfElastics = IterableUtils.toList(elasticRepository.findByDenominazione(name, pageRequest));
+                break;
+            case "STARTS WITH":
+                pfElastics = IterableUtils.toList(elasticRepository.findByDenominazioneStartingWith(name, pageRequest));
+                break;
+            case "CONTAINS":
+                pfElastics = IterableUtils.toList(elasticRepository.findByDenominazioneContaining(name, pageRequest));
+                break;
+            default:
+                break;
+        }
+
         List<String> cfs = pfElastics.stream().map(PfElastic::getCodiceFiscale).collect(Collectors.toList());
-        log.warn("#Codici Fiscali elastic: {}", cfs.size());
+        log.warn("=== #Codici Fiscali elastic: {}", cfs.size());
 
         List<QRUfficiPf> ufficiByPfNames = pfRepository.findUfficiByPfNames(cfs);
+        log.warn("=== #Path Neo4j trovati: {}", ufficiByPfNames.size());
+
         return ufficiByPfNames;
     }
 }
