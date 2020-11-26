@@ -13,11 +13,4 @@ public interface PfElasticRepository extends ElasticsearchRepository<PfElastic, 
 
     @Query("{\"match_all\": {}}")
     Page<PfElastic> findAll(Pageable pageable);
-
-    /*@Query("{\"match\": {\n" +
-            "      \"denominazione\": {\n" +
-            "        \"query\": \"ORefice\"\n" +
-            "      }\n" +
-            "    }}")
-    Page<PfElastic> findByDenominazione(@Param("name") String denominazione, Pageable pageable);*/
 }
