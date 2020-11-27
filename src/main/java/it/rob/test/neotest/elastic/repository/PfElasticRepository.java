@@ -14,6 +14,12 @@ public interface PfElasticRepository extends ElasticsearchRepository<PfElastic, 
 
     Page<PfElastic> findByDenominazioneContaining(String denominazione, Pageable pageable);
 
+    Page<PfElastic> findByCodiceFiscale(String denominazione, Pageable pageable);
+
+    Page<PfElastic> findByCodiceFiscaleStartingWith(String denominazione, Pageable pageable);
+
+    Page<PfElastic> findByCodiceFiscaleContaining(String denominazione, Pageable pageable);
+
     @Query("{\"match_all\": {}}")
     Page<PfElastic> findAll(Pageable pageable);
 }
