@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.text.MessageFormat;
+import java.util.EnumSet;
 import java.util.List;
 
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
@@ -38,7 +39,7 @@ public class PfElasticService {
                 pfElastics = IterableUtils.toList(pfElasticRepository.findByDenominazioneStartingWith(name, pageRequest));
                 break;
             default:
-                throw new BadRequestException("");
+                throw new BadRequestException(MessageFormat.format("SearchType must be one of the following: {0}", EnumSet.allOf(SearchType.class)));
         }
 
         if(isEmpty(pfElastics)) {
