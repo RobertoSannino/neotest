@@ -30,7 +30,7 @@ public class PfElasticController {
     }
 
     @GetMapping(path = "/pf-by-name", produces = MediaType.APPLICATION_JSON_VALUE)
-    List<PfElastic> getPfByName(@RequestParam(name = "name") String name,
+    public List<PfElastic> getPfByName(@RequestParam(name = "name") String name,
                                 @RequestParam(name = "searchType") SearchType searchType,
                                 @RequestParam(name = "page") int pageNumber,
                                 @RequestParam(name = "results") int numberOfResults) {
@@ -38,7 +38,7 @@ public class PfElasticController {
     }
 
     @GetMapping(path = "/uffici-by-pf-name", produces = MediaType.APPLICATION_JSON_VALUE)
-    List<QRUfficiPf> getUfficiByPfByName(@RequestParam(name = "name") String name,
+    public List<QRUfficiPf> getUfficiByPfByName(@RequestParam(name = "name") String name,
                                          @RequestParam(name = "searchType") SearchType searchType,
                                          @RequestParam(name = "page") int pageNumber,
                                          @RequestParam(name = "results") int numberOfResults) {
