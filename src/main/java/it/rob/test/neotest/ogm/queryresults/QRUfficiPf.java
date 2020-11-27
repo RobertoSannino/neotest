@@ -16,4 +16,10 @@ public class QRUfficiPf {
 
     @Field("ut")
     UfficioTerritoriale ut;
+
+    @Field("to_up")
+    Object to_up;
+
+    @Field("to_ut")
+    Object to_ut;
 }
