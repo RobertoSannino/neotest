@@ -104,7 +104,7 @@ public class PfElasticController {
             @ApiResponse(responseCode = "404", description = "No results for the research",
                     content = @Content) })
     @PostMapping(path = "/uffici-by-queries", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Object> getUfficiByPfQueries(@RequestBody List<QueryApi> queriesApi,
+    public List<QRUfficiPf> getUfficiByPfQueries(@RequestBody List<QueryApi> queriesApi,
                                                  @RequestParam(name = "queryLogic") String queryLogic,
                                                  @RequestParam(name = "limit") @Positive int numberOfResults) {
          return pfService.getUfficitTerritorialiByQueries(

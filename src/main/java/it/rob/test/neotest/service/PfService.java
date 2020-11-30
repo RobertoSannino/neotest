@@ -44,12 +44,12 @@ public class PfService {
         return ufficiByPfNames;
     }
 
-    public List<Object> getUfficitTerritorialiByQueries(List<String> cfList, String queryLogic) {
+    public List<QRUfficiPf> getUfficitTerritorialiByQueries(List<String> cfList, String queryLogic) {
 
         log.warn("cflist: {}", cfList);
-        List<Object> ufficiByPfNames = pfRepository.findUfficiByQueries(cfList, queryLogic);
+        List<QRUfficiPf> ufficiByPfNames = pfRepository.findUfficiByQueries(cfList, queryLogic);
 
-        if(isEmpty(ufficiByPfNames)) {
+        if(isEmpty(ufficiByPfNames) || ("and".equalsIgnoreCase(queryLogic) && ufficiByPfNames.size() != cfList.size())) {
             throw new NotFoundException("Cannot find UfficiTerritoriali linked to the specified Pfs");
         }
 

@@ -34,7 +34,7 @@ public class PfElasticService {
                 pageRequest,
                 pfElasticRepository::findByDenominazione,
                 pfElasticRepository::findByDenominazioneContaining,
-                pfElasticRepository::findByCodiceFiscaleStartingWith);
+                pfElasticRepository::findByDenominazioneStartingWith);
     }
 
     public List<PfElastic> getPfByCf(String cf, SearchType searchType, Pageable pageRequest) {
