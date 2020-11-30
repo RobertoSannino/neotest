@@ -1,5 +1,6 @@
 package it.rob.test.neotest.http.neo4j;
 
+import it.rob.test.neotest.exception.BadRequestException;
 import it.rob.test.neotest.ogm.entity.node.Pf;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

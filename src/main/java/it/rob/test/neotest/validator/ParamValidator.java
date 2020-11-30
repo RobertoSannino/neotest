@@ -17,4 +17,5 @@ public class ParamValidator {
             throw new BadRequestException("Page number and number of results must be greater than zero");
         }
     }
+
 }

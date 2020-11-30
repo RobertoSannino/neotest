@@ -8,6 +8,9 @@ import org.junit.runner.RunWith;
 
 @RunWith(JUnitPlatform.class)
 @SuiteDisplayName("JUnit Platform Suite Demo")
-@SelectPackages({"it.rob.test.neotest.http.elastic","it.rob.test.neotest.http.neo4j"})
+@SelectPackages({
+        "it.rob.test.neotest.http.elastic",
+        "it.rob.test.neotest.http.neo4j"
+})
 public class AllTestSuite {
 }

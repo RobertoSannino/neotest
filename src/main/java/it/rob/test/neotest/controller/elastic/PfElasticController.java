@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import it.rob.test.neotest.api.QueryApi;
 import it.rob.test.neotest.constant.SearchType;
 import it.rob.test.neotest.elastic.entity.PfElastic;
 import it.rob.test.neotest.ogm.queryresults.QRUfficiPf;
@@ -14,11 +15,10 @@ import it.rob.test.neotest.service.PfService;
 import it.rob.test.neotest.util.PageableUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.Positive;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -91,5 +91,26 @@ public class PfElasticController {
         return pfService.getUfficitTerritorialiByPfDenoms(
                 emptyIfNull(elasticService.getPfByCf(cf, searchType, PageableUtil.createPageRequest(pageNumber, numberOfResults)))
                         .stream().map(PfElastic::getCodiceFiscale).collect(Collectors.toList()));
+    }
+
+    @Operation(summary = "Search for Pfs by denom and search type in Elastic and then search for paths between them and UfficiTerritoriali in Neo4j, results are paginated" +
+            "and aggregated in terms of query logic")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Found Pfs and paths",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PfElastic.class)) }),
+            @ApiResponse(responseCode = "400", description = "Invalid searchType or pagination supplied",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "No results for the research",
+                    content = @Content) })
+    @PostMapping(path = "/uffici-by-queries", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Object> getUfficiByPfQueries(@RequestBody List<QueryApi> queriesApi,
+                                                 @RequestParam(name = "queryLogic") String queryLogic,
+                                                 @RequestParam(name = "limit") @Positive int numberOfResults) {
+         return pfService.getUfficitTerritorialiByQueries(
+                 queriesApi.stream().map(q -> elasticService.getPfByDenominazione(q.getValue(), q.getSearchType(), PageableUtil.createPageRequest(0, numberOfResults)))
+                .flatMap(Collection::stream).map(PfElastic::getCodiceFiscale).collect(Collectors.toList()),
+                 queryLogic
+         );
     }
 }

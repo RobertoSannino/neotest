@@ -44,5 +44,19 @@ public class PfService {
         return ufficiByPfNames;
     }
 
+    public List<Object> getUfficitTerritorialiByQueries(List<String> cfList, String queryLogic) {
+
+        log.warn("cflist: {}", cfList);
+        List<Object> ufficiByPfNames = pfRepository.findUfficiByQueries(cfList, queryLogic);
+
+        if(isEmpty(ufficiByPfNames)) {
+            throw new NotFoundException("Cannot find UfficiTerritoriali linked to the specified Pfs");
+        }
+
+        return ufficiByPfNames;
+    }
+
+
+
 
 }
