@@ -1,5 +1,6 @@
 package it.rob.test.neotest.service;
 
+import it.rob.test.neotest.api.QueryApi;
 import it.rob.test.neotest.exception.NotFoundException;
 import it.rob.test.neotest.ogm.entity.node.Pf;
 import it.rob.test.neotest.ogm.queryresults.QRUfficiPf;
@@ -48,6 +49,17 @@ public class PfService {
 
         log.warn("cflist: {}", cfList);
         List<QRUfficiPf> ufficiByPfNames = pfRepository.findUfficiByQueries(cfList, queryLogic);
+
+        if(isEmpty(ufficiByPfNames) || ("and".equalsIgnoreCase(queryLogic) && ufficiByPfNames.size() != cfList.size())) {
+            throw new NotFoundException("Cannot find UfficiTerritoriali linked to the specified Pfs");
+        }
+
+        return ufficiByPfNames;
+    }
+
+    public List<QRUfficiPf> getUfficitTerritorialiByQueriesFromNeo(List<QueryApi> cfList, String queryLogic, int limit) {
+
+        List<QRUfficiPf> ufficiByPfNames = pfRepository.findUfficiByQueriesNeo(cfList, queryLogic, limit);
 
         if(isEmpty(ufficiByPfNames) || ("and".equalsIgnoreCase(queryLogic) && ufficiByPfNames.size() != cfList.size())) {
             throw new NotFoundException("Cannot find UfficiTerritoriali linked to the specified Pfs");
