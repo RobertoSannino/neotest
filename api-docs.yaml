@@ -1,0 +1,275 @@
+openapi: 3.0.1
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+paths:
+  /elastic/pf-by-name:
+    get:
+      tags:
+      - pf-elastic-controller
+      summary: "Search for Pfs by name and search type in Elastic, results are paginated"
+      operationId: getPfByName
+      parameters:
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: searchType
+        in: query
+        description: EXACT; CONTAINS; STARTS_WITH
+        required: true
+        schema:
+          type: string
+          enum:
+          - EXACT
+          - CONTAINS
+          - STARTS_WITH
+      - name: page
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: results
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: No results for the research
+        "400":
+          description: Invalid searchType or pagination supplied
+        "200":
+          description: Found Pfs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PfElastic'
+  /elastic/uffici-by-pf-cf:
+    get:
+      tags:
+      - pf-elastic-controller
+      summary: "Search for Pfs by cf and search type in Elastic and then search for\
+        \ paths between them and UfficiTerritoriali in Neo4j, results are paginated"
+      operationId: getUfficiByPfCf
+      parameters:
+      - name: cf
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: searchType
+        in: query
+        description: EXACT; CONTAINS; STARTS_WITH
+        required: true
+        schema:
+          type: string
+          enum:
+          - EXACT
+          - CONTAINS
+          - STARTS_WITH
+      - name: page
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: results
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: No results for the research
+        "200":
+          description: Found Pfs and paths
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PfElastic'
+        "400":
+          description: Invalid searchType or pagination supplied
+  /elastic/uffici-by-queries:
+    post:
+      tags:
+      - pf-elastic-controller
+      summary: "Search for Pfs by denom and search type in Elastic and then search\
+        \ for paths between them and UfficiTerritoriali in Neo4j, results are paginatedand\
+        \ aggregated in terms of query logic"
+      operationId: getUfficiByPfQueries
+      parameters:
+      - name: queryLogic
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/QueryApi'
+      responses:
+        "404":
+          description: No results for the research
+        "200":
+          description: Found Pfs and paths
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PfElastic'
+        "400":
+          description: Invalid searchType or pagination supplied
+  /elastic/uffici-by-pf-name:
+    get:
+      tags:
+      - pf-elastic-controller
+      summary: "Search for Pfs by name and search type in Elastic and then search\
+        \ for paths between them and UfficiTerritoriali in Neo4j, results are paginated"
+      operationId: getUfficiByPfByName
+      parameters:
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: searchType
+        in: query
+        description: EXACT; CONTAINS; STARTS_WITH
+        required: true
+        schema:
+          type: string
+          enum:
+          - EXACT
+          - CONTAINS
+          - STARTS_WITH
+      - name: page
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: results
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: No results for the research
+        "200":
+          description: Found Pfs and paths
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PfElastic'
+        "400":
+          description: Invalid searchType or pagination supplied
+  /neo4j/pf:
+    get:
+      tags:
+      - pf-controller
+      summary: Search for a Pf by codiceFiscale in Neo4j
+      operationId: getPf
+      parameters:
+      - name: cf
+        in: query
+        required: true
+        schema:
+          maxLength: 16
+          minLength: 16
+          type: string
+      responses:
+        "200":
+          description: Found Pf
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PfElastic'
+        "400":
+          description: "Invalid number of characters, CF must be exactly 16 chars\
+            \ long"
+        "404":
+          description: No results for the research
+  /neo4j/uffici-by-queries-from-neo:
+    post:
+      tags:
+      - pf-controller
+      summary: "Search for Pfs by denom and search type and then search for paths\
+        \ between them and UfficiTerritoriali, results are paginatedand aggregated\
+        \ in terms of query logic"
+      operationId: getUfficiByPfQueries_1
+      parameters:
+      - name: queryLogic
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/QueryApi'
+      responses:
+        "404":
+          description: No results for the research
+        "200":
+          description: Found Pfs and paths
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PfElastic'
+        "400":
+          description: Invalid searchType or pagination supplied
+components:
+  schemas:
+    PfElastic:
+      type: object
+      properties:
+        id:
+          type: string
+        denominazione:
+          type: string
+        zzCode:
+          type: string
+        codiceFiscale:
+          type: string
+    QueryApi:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        searchType:
+          type: string
+          enum:
+          - EXACT
+          - CONTAINS
+          - STARTS_WITH
+        label:
+          type: string

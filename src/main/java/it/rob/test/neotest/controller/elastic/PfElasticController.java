@@ -45,7 +45,7 @@ public class PfElasticController {
                     content = @Content),
             @ApiResponse(responseCode = "404", description = "No results for the research",
                     content = @Content) })
-    @GetMapping(path = "/pf-by-name", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/elastic/pf-by-name", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<PfElastic> getPfByName(@RequestParam(name = "name") String name,
                                 @RequestParam(name = "searchType") @Parameter(description = "EXACT; CONTAINS; STARTS_WITH") SearchType searchType,
                                 @RequestParam(name = "page") @Positive int pageNumber,
@@ -62,7 +62,7 @@ public class PfElasticController {
                     content = @Content),
             @ApiResponse(responseCode = "404", description = "No results for the research",
                     content = @Content) })
-    @GetMapping(path = "/uffici-by-pf-name", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/elastic/uffici-by-pf-name", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<QRUfficiPf> getUfficiByPfByName(@RequestParam(name = "name") String name,
                                          @RequestParam(name = "searchType")  @Parameter(description = "EXACT; CONTAINS; STARTS_WITH") SearchType searchType,
                                          @RequestParam(name = "page") @Positive int pageNumber,
@@ -82,7 +82,7 @@ public class PfElasticController {
                     content = @Content),
             @ApiResponse(responseCode = "404", description = "No results for the research",
                     content = @Content) })
-    @GetMapping(path = "/uffici-by-pf-cf", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/elastic/uffici-by-pf-cf", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<QRUfficiPf> getUfficiByPfCf(@RequestParam(name = "cf") String cf,
                                                 @RequestParam(name = "searchType")  @Parameter(description = "EXACT; CONTAINS; STARTS_WITH") SearchType searchType,
                                                 @RequestParam(name = "page") @Positive int pageNumber,
@@ -103,7 +103,7 @@ public class PfElasticController {
                     content = @Content),
             @ApiResponse(responseCode = "404", description = "No results for the research",
                     content = @Content) })
-    @PostMapping(path = "/uffici-by-queries", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = "/elastic/uffici-by-queries", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<QRUfficiPf> getUfficiByPfQueries(@RequestBody List<QueryApi> queriesApi,
                                                  @RequestParam(name = "queryLogic") String queryLogic,
                                                  @RequestParam(name = "limit") @Positive int numberOfResults) {

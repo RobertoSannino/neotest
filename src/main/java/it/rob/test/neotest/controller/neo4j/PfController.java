@@ -38,7 +38,7 @@ public class PfController {
                     content = @Content),
             @ApiResponse(responseCode = "404", description = "No results for the research",
                     content = @Content) })
-    @GetMapping(path = "/pf", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/neo4j/pf", produces = MediaType.APPLICATION_JSON_VALUE)
     public Pf getPf(@RequestParam(name = "cf") @Size(min = 16, max = 16) String codiceFiscale) {
         return pfService.getPfByCodiceFiscale(codiceFiscale);
     }
@@ -53,7 +53,7 @@ public class PfController {
                     content = @Content),
             @ApiResponse(responseCode = "404", description = "No results for the research",
                     content = @Content) })
-    @PostMapping(path = "/uffici-by-queries-from-neo", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = "/neo4j/uffici-by-queries-from-neo", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<QRUfficiPf> getUfficiByPfQueries(@RequestBody List<QueryApi> queriesApi,
                                                  @RequestParam(name = "queryLogic") String queryLogic,
                                                  @RequestParam(name = "limit") @Positive int numberOfResults) {
