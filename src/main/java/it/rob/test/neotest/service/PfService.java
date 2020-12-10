@@ -1,6 +1,6 @@
 package it.rob.test.neotest.service;
 
-import it.rob.test.neotest.api.QueryApi;
+import it.rob.test.neotest.api.v1.QueryApi;
 import it.rob.test.neotest.exception.NotFoundException;
 import it.rob.test.neotest.ogm.entity.node.Pf;
 import it.rob.test.neotest.ogm.queryresults.QRUfficiPf;

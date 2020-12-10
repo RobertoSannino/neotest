@@ -6,7 +6,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import it.rob.test.neotest.api.QueryApi;
+import it.rob.test.neotest.api.v1.QueryApi;
+import it.rob.test.neotest.api.v2.QueryV2Api;
 import it.rob.test.neotest.constant.SearchType;
 import it.rob.test.neotest.elastic.entity.PfElastic;
 import it.rob.test.neotest.ogm.queryresults.QRUfficiPf;
@@ -112,5 +113,24 @@ public class PfElasticController {
                 .flatMap(Collection::stream).map(PfElastic::getCodiceFiscale).collect(Collectors.toList()),
                  queryLogic
          );
+    }
+
+    @Operation(summary = "Search for entities in Elastic by queries , results are paginated" +
+            "and aggregated in terms of query logic")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Found Pfs and paths",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PfElastic.class)) }),
+            @ApiResponse(responseCode = "400", description = "Invalid searchType or pagination supplied",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "No results for the research",
+                    content = @Content) })
+    @PostMapping(path = "/elastic/v2/uffici-by-queries", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<QRUfficiPf> getEntitiesByQueries(@RequestBody QueryV2Api queryV2Api,
+                                                 /*@RequestParam(name = "queryLogic") String queryLogic,*/
+                                                 @RequestParam(name = "limit") @Positive int numberOfResults) {
+
+        elasticService.fillXonarIds(queryV2Api);
+        return null;
     }
 }

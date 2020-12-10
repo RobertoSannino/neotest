@@ -5,20 +5,17 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import it.rob.test.neotest.api.QueryApi;
+import it.rob.test.neotest.api.v1.QueryApi;
 import it.rob.test.neotest.elastic.entity.PfElastic;
 import it.rob.test.neotest.ogm.entity.node.Pf;
 import it.rob.test.neotest.ogm.queryresults.QRUfficiPf;
 import it.rob.test.neotest.service.PfService;
-import it.rob.test.neotest.util.PageableUtil;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 public class PfController {

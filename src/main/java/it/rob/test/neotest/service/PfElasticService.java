@@ -1,10 +1,16 @@
 package it.rob.test.neotest.service;
 
+import it.rob.test.neotest.api.v2.NodeQuery;
+import it.rob.test.neotest.api.v2.QueryV2Api;
+import it.rob.test.neotest.api.v2.RelQuery;
 import it.rob.test.neotest.constant.SearchType;
 import it.rob.test.neotest.elastic.entity.PfElastic;
+import it.rob.test.neotest.elastic.repository.GenericElasticRepository;
 import it.rob.test.neotest.elastic.repository.PfElasticRepository;
 import it.rob.test.neotest.exception.BadRequestException;
 import it.rob.test.neotest.exception.NotFoundException;
+import it.rob.test.neotest.ogm.repository.GenericNeo4jRepository;
+import it.rob.test.neotest.util.ElasticUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.IterableUtils;
 import org.springframework.data.domain.Page;
@@ -12,10 +18,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
+import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 @Slf4j
@@ -46,6 +57,40 @@ public class PfElasticService {
                 pfElasticRepository::findByCodiceFiscaleStartingWith);
     }
 
+    public void fillXonarIds(QueryV2Api queryV2Api) {
+        GenericElasticRepository ger = new GenericElasticRepository();
+        queryV2Api.getNodeQueries().forEach(nq -> nq.setIdsXonarRequired(!isEmpty(nq.getConstraints())));
+
+        for (NodeQuery nq : queryV2Api.getNodeQueries()) {
+            String indexName = ElasticUtils.getIndexForLabel(nq.getLabel());
+            List<String> xonarIds = ger.getIdsFor(indexName, nq.getLabel(), emptyIfNull(nq.getConstraints()));
+            log.info("IDs for {}-{}: {}", nq.getId(), nq.getLabel(), xonarIds);
+            nq.setIdsXonar(xonarIds);
+        }
+
+        GenericNeo4jRepository gnr = new GenericNeo4jRepository();
+        String query = "";
+        // List<Map<String, Object>> paths = new ArrayList<>();
+
+        int i = 0;
+        for (RelQuery rq : queryV2Api.getRelQueries()) {
+            query = query + " \n" + (gnr.generateMatchPath(
+                    i,
+                    queryV2Api.getNodeQueries().stream().filter(nq -> nq.getId() == rq.getStart()).findFirst().get(),
+                    queryV2Api.getNodeQueries().stream().filter(nq -> nq.getId() == rq.getEnd()).findFirst().get(),
+                    rq.getLabel()
+            ));
+            i++;
+        }
+
+        query = query + " \nRETURN *";
+        log.info("Query created: {}", query);
+        List<Map<String, Object>> paths = gnr.runCypherQuery(query);
+
+        log.info("Path results: {}", paths);
+
+    }
+
     private List<PfElastic> getPfBySearchType(String value, SearchType searchType, Pageable pageRequest,
                                               BiFunction<String, Pageable, Page<PfElastic>> exact,
                                               BiFunction<String, Pageable, Page<PfElastic>> contains,
@@ -74,4 +119,6 @@ public class PfElasticService {
 
         return pfElastics;
     }
+
+
 }

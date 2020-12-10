@@ -1,4 +1,4 @@
-package it.rob.test.neotest.api;
+package it.rob.test.neotest.api.v1;
 
 import it.rob.test.neotest.constant.SearchType;
 import lombok.Data;
