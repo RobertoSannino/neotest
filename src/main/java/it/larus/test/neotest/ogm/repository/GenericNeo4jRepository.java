@@ -1,10 +1,12 @@
 package it.larus.test.neotest.ogm.repository;
 
+import it.larus.test.neotest.api.v3.v2.OrderByNode;
 import it.larus.test.neotest.util.ElasticUtils;
 import it.larus.test.neotest.api.v2.NodeQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringSubstitutor;
 import org.neo4j.driver.*;
+import org.neo4j.driver.Record;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,6 +61,17 @@ public class GenericNeo4jRepository {
 
         StringSubstitutor sub = new StringSubstitutor(parameters);
         return sub.replace(matchPath);
+    }
+
+    public String generateOrderBy(OrderByNode node) {
+        String orderByPart = "n${i}.${attr}";
+
+        HashMap<String, String> parameters = new HashMap<>();
+        parameters.put("i", String.valueOf(node.getId()));
+        parameters.put("attr", node.getAttr());
+
+        StringSubstitutor sub = new StringSubstitutor(parameters);
+        return sub.replace(orderByPart);
     }
 
 }

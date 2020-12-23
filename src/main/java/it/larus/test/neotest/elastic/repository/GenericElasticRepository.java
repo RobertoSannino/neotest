@@ -101,10 +101,11 @@ public class GenericElasticRepository {
         return ids;
     }
 
-    public List<String> getIdsFor(String index, String label, String query) {
+    public List<String> getIdsFor(String index, String label, String query, int limit) {
         SearchRequest searchRequest = new SearchRequest(index);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(QueryBuilders.wrapperQuery(query));
+        searchSourceBuilder.size(limit);
         searchRequest.source(searchSourceBuilder);
 
         List<String> ids = new ArrayList<>();

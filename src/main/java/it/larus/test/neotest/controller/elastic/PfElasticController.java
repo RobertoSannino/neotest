@@ -147,9 +147,10 @@ public class PfElasticController {
                     content = @Content) })
     @PostMapping(path = "/elastic/v2/uffici-by-es-queries", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<QRUfficiPf> getEntitiesByESQueries(@RequestBody QueryV3Api queryV3Api,
-                                                   @RequestParam(name = "limit") @Positive int numberOfResults) {
-
-        elasticService.resolveQuery(queryV3Api);
+                                                   @RequestParam(name = "limit_nodes") @Positive int limitNode,
+                                                   @RequestParam(name = "limit_rel") @Positive int limitRel
+    ) {
+        elasticService.resolveQuery(queryV3Api, limitNode, limitRel);
         return null;
     }
 }

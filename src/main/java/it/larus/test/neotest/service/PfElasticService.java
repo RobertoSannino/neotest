@@ -19,12 +19,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import javax.validation.constraints.Positive;
 import java.text.MessageFormat;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
+import static java.util.Objects.nonNull;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
@@ -88,13 +90,13 @@ public class PfElasticService {
         log.info("Path results: {}", paths);
     }
 
-    public void resolveQuery(QueryV3Api queryV3Api) {
+    public void resolveQuery(QueryV3Api queryV3Api, @Positive int limitNode, @Positive int limitRel) {
         GenericElasticRepository ger = new GenericElasticRepository();
         queryV3Api.getNodeQueries().forEach(nq -> nq.setIdsXonarRequired(true));
 
         for (NodeQueryV3Api nodeQuery : queryV3Api.getNodeQueries()) {
             String indexName = ElasticUtils.getIndexForLabel(nodeQuery.getLabel());
-            List<String> xonarIds = ger.getIdsFor(indexName, nodeQuery.getLabel(), nodeQuery.getQuery());
+            List<String> xonarIds = ger.getIdsFor(indexName, nodeQuery.getLabel(), nodeQuery.getQuery(), limitNode);
             log.info("IDs for {}-{}: {}", nodeQuery.getId(), nodeQuery.getLabel(), xonarIds);
             nodeQuery.setIdsXonar(xonarIds);
         }
@@ -104,16 +106,22 @@ public class PfElasticService {
 
         int i = 0;
         for (RelQuery relationshipQuery : queryV3Api.getRelQueries()) {
-            query.append(" \n").append(gnr.generateMatchPath(
-                    i,
-                    queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId() == relationshipQuery.getStart()).findFirst().get(),
-                    queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId() == relationshipQuery.getEnd()).findFirst().get(),
-                    relationshipQuery.getLabel()
-            ));
+            NodeQuery startNode = queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId() == relationshipQuery.getStart()).findFirst().get();
+            NodeQuery endNode = queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId() == relationshipQuery.getEnd()).findFirst().get();
+            query.append(" \n").append(gnr.generateMatchPath(i, startNode, endNode, relationshipQuery.getLabel()));
             i++;
         }
 
-        query.append(" \nRETURN *");
+        query.append(" \nRETURN * ");
+
+        if (nonNull(queryV3Api.getOrderByNodes())) {
+            query.append(" \nORDER BY " );
+            queryV3Api.getOrderByNodes().forEach(o -> query.append(gnr.generateOrderBy(o) + ", "));
+            query.deleteCharAt(query.lastIndexOf(", "));
+        }
+
+        query.append("\nLIMIT " + limitRel);
+
         log.info("Query created: {}", query.toString());
         List<Map<String, Object>> paths = gnr.runCypherQuery(query.toString());
 
