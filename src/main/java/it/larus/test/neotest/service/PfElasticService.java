@@ -72,15 +72,13 @@ public class PfElasticService {
         GenericNeo4jRepository gnr = new GenericNeo4jRepository();
         StringBuilder query = new StringBuilder();
 
-        int i = 0;
         for (RelQuery relationshipQuery : queryV2Api.getRelQueries()) {
             query.append(" \n").append(gnr.generateMatchPath(
-                    i,
+                    relationshipQuery.getId(),
                     queryV2Api.getNodeQueries().stream().filter(nq -> nq.getId() == relationshipQuery.getStart()).findFirst().get(),
                     queryV2Api.getNodeQueries().stream().filter(nq -> nq.getId() == relationshipQuery.getEnd()).findFirst().get(),
                     relationshipQuery.getLabel()
             ));
-            i++;
         }
 
         query.append(" \nRETURN *");
@@ -104,22 +102,13 @@ public class PfElasticService {
         GenericNeo4jRepository gnr = new GenericNeo4jRepository();
         StringBuilder query = new StringBuilder();
 
-        int i = 0;
         for (RelQuery relationshipQuery : queryV3Api.getRelQueries()) {
-            NodeQuery startNode = queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId() == relationshipQuery.getStart()).findFirst().get();
-            NodeQuery endNode = queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId() == relationshipQuery.getEnd()).findFirst().get();
-            query.append(" \n").append(gnr.generateMatchPath(i, startNode, endNode, relationshipQuery.getLabel()));
-            i++;
+            NodeQuery startNode = queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId().equals(relationshipQuery.getStart())).findFirst().get();
+            NodeQuery endNode = queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId().equals(relationshipQuery.getEnd())).findFirst().get();
+            query.append(" \n").append(gnr.generateMatchPath(relationshipQuery.getId(), startNode, endNode, relationshipQuery.getLabel()));
         }
 
-        query.append(" \nRETURN * ");
-
-        if (nonNull(queryV3Api.getOrderByNodes())) {
-            query.append(" \nORDER BY " );
-            queryV3Api.getOrderByNodes().forEach(o -> query.append(gnr.generateOrderBy(o) + ", "));
-            query.deleteCharAt(query.lastIndexOf(", "));
-        }
-
+        query.append("\nRETURN " + queryV3Api.getReturnCond());
         query.append("\nLIMIT " + limitRel);
 
         log.info("Query created: {}", query.toString());

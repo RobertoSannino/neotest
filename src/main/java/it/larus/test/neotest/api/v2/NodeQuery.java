@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 public class NodeQuery {
 
-    long id;
+    String id;
 
     List<String> idsXonar;
     boolean idsXonarRequired = true;

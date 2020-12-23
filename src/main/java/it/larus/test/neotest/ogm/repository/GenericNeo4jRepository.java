@@ -42,17 +42,17 @@ public class GenericNeo4jRepository {
         return results;
     }
 
-    public String generateMatchPath(int i, NodeQuery startNode, NodeQuery endNode, String relLabel) {
+    public String generateMatchPath(String pathName, NodeQuery startNode, NodeQuery endNode, String relLabel) {
         String matchPath =
-                "MATCH p${i} = (${startName}:${startLabel})-[:${relLabel}]->(${endName}:${endLabel}) " +
+                "MATCH ${pathName} = (${startName}:${startLabel})-[:${relLabel}]->(${endName}:${endLabel}) " +
                 "WHERE ${startName}.${startId} IN ${listStartNodeIds} AND ${endName}.${endId} IN ${listEndNodeIds}";
 
         HashMap<String, String> parameters = new HashMap<>();
-        parameters.put("i", String.valueOf(i));
-        parameters.put("startName", "n" + String.valueOf(startNode.getId()));
+        parameters.put("pathName", pathName);
+        parameters.put("startName", startNode.getId());
         parameters.put("startLabel", startNode.getLabel());
         parameters.put("relLabel", relLabel);
-        parameters.put("endName", "n" + String.valueOf(endNode.getId()));
+        parameters.put("endName", endNode.getId());
         parameters.put("endLabel", endNode.getLabel());
         parameters.put("startId", ElasticUtils.getIdNameForLabel(startNode.getLabel()));
         parameters.put("listStartNodeIds", startNode.getIdsXonar().stream().map(ids -> "'"+ids+"'").collect(Collectors.toList()).toString());
@@ -61,17 +61,6 @@ public class GenericNeo4jRepository {
 
         StringSubstitutor sub = new StringSubstitutor(parameters);
         return sub.replace(matchPath);
-    }
-
-    public String generateOrderBy(OrderByNode node) {
-        String orderByPart = "n${i}.${attr}";
-
-        HashMap<String, String> parameters = new HashMap<>();
-        parameters.put("i", String.valueOf(node.getId()));
-        parameters.put("attr", node.getAttr());
-
-        StringSubstitutor sub = new StringSubstitutor(parameters);
-        return sub.replace(orderByPart);
     }
 
 }

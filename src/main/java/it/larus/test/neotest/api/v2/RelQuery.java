@@ -7,9 +7,10 @@ import java.util.List;
 @Data
 public class RelQuery {
 
+    String id;
     String label;
-    long start;
-    long end;
+    String start;
+    String end;
     List<QueryConstraint> constraints;
 
 }

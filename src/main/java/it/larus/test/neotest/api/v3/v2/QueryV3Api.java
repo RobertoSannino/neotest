@@ -10,6 +10,6 @@ public class QueryV3Api {
 
     List<NodeQueryV3Api> nodeQueries;
     List<RelQuery> relQueries;
-    List<OrderByNode> orderByNodes;
+    String returnCond;
 
 }
