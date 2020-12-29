@@ -6,15 +6,15 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import it.larus.test.neotest.api.v3.v2.QueryV3Api;
-import it.larus.test.neotest.elastic.entity.PfElastic;
-import it.larus.test.neotest.ogm.queryresults.QRUfficiPf;
-import it.larus.test.neotest.util.PageableUtil;
 import it.larus.test.neotest.api.v1.QueryApi;
 import it.larus.test.neotest.api.v2.QueryV2Api;
+import it.larus.test.neotest.api.v3.v2.QueryV3Api;
 import it.larus.test.neotest.constant.SearchType;
+import it.larus.test.neotest.elastic.entity.PfElastic;
+import it.larus.test.neotest.ogm.queryresults.QRUfficiPf;
 import it.larus.test.neotest.service.PfElasticService;
 import it.larus.test.neotest.service.PfService;
+import it.larus.test.neotest.util.PageableUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -146,11 +146,10 @@ public class PfElasticController {
             @ApiResponse(responseCode = "404", description = "No results for the research",
                     content = @Content) })
     @PostMapping(path = "/elastic/v2/uffici-by-es-queries", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<QRUfficiPf> getEntitiesByESQueries(@RequestBody QueryV3Api queryV3Api,
-                                                   @RequestParam(name = "limit_nodes") @Positive int limitNode,
-                                                   @RequestParam(name = "limit_rel") @Positive int limitRel
+    public String getEntitiesByESQueries(@RequestBody QueryV3Api queryV3Api,
+                                         @RequestParam(name = "limit_nodes") @Positive int limitNode,
+                                         @RequestParam(name = "limit_rel") @Positive int limitRel
     ) {
-        elasticService.resolveQuery(queryV3Api, limitNode, limitRel);
-        return null;
+        return elasticService.resolveQuery(queryV3Api, limitNode, limitRel).toString();
     }
 }

@@ -14,7 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.nonNull;
 import static org.neo4j.driver.Values.parameters;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 @Slf4j
 public class GenericNeo4jRepository {
@@ -42,22 +44,36 @@ public class GenericNeo4jRepository {
         return results;
     }
 
-    public String generateMatchPath(String pathName, NodeQuery startNode, NodeQuery endNode, String relLabel) {
-        String matchPath =
-                "MATCH ${pathName} = (${startName}:${startLabel})-[:${relLabel}]->(${endName}:${endLabel}) " +
-                "WHERE ${startName}.${startId} IN ${listStartNodeIds} AND ${endName}.${endId} IN ${listEndNodeIds}";
-
+    public String generateMatchPath(String pathName, NodeQuery startNode, NodeQuery endNode, String relLabel, int maxDepth) {
         HashMap<String, String> parameters = new HashMap<>();
+        String matchPath =
+                "MATCH ${pathName} = (${startName}:${startLabel})-[${relLabel}]->(${endName}:${endLabel}) ";
+
+        if (!isEmpty(startNode.getIdsXonar()) || !isEmpty(endNode.getIdsXonar()))
+            matchPath = matchPath + "WHERE ";
+
+        if (!isEmpty(startNode.getIdsXonar()) && !isEmpty(endNode.getIdsXonar())) {
+            matchPath = matchPath + "${startName}.${startId} IN ${listStartNodeIds} AND ${endName}.${endId} IN ${listEndNodeIds}";
+            parameters.put("listStartNodeIds", startNode.getIdsXonar().stream().map(ids -> "'"+ids+"'").collect(Collectors.toList()).toString());
+            parameters.put("listEndNodeIds", endNode.getIdsXonar().stream().map(ids -> "'"+ids+"'").collect(Collectors.toList()).toString());
+        } else if (!isEmpty(startNode.getIdsXonar())) {
+            matchPath = matchPath + "${startName}.${startId} IN ${listStartNodeIds}";
+            parameters.put("listStartNodeIds", startNode.getIdsXonar().stream().map(ids -> "'"+ids+"'").collect(Collectors.toList()).toString());
+        } else if (!isEmpty(endNode.getIdsXonar())) {
+            matchPath = matchPath + "${endName}.${endId} IN ${listEndNodeIds}";
+            parameters.put("listEndNodeIds", endNode.getIdsXonar().stream().map(ids -> "'"+ids+"'").collect(Collectors.toList()).toString());
+        }
+
         parameters.put("pathName", pathName);
         parameters.put("startName", startNode.getId());
         parameters.put("startLabel", startNode.getLabel());
-        parameters.put("relLabel", relLabel);
+        parameters.put("relLabel",  nonNull(relLabel) ? ":" + relLabel : "*0.." + maxDepth);
         parameters.put("endName", endNode.getId());
         parameters.put("endLabel", endNode.getLabel());
         parameters.put("startId", ElasticUtils.getIdNameForLabel(startNode.getLabel()));
-        parameters.put("listStartNodeIds", startNode.getIdsXonar().stream().map(ids -> "'"+ids+"'").collect(Collectors.toList()).toString());
+        // parameters.put("listStartNodeIds", startNode.getIdsXonar().stream().map(ids -> "'"+ids+"'").collect(Collectors.toList()).toString());
         parameters.put("endId", ElasticUtils.getIdNameForLabel(endNode.getLabel()));
-        parameters.put("listEndNodeIds", endNode.getIdsXonar().stream().map(ids -> "'"+ids+"'").collect(Collectors.toList()).toString());
+        // parameters.put("listEndNodeIds", endNode.getIdsXonar().stream().map(ids -> "'"+ids+"'").collect(Collectors.toList()).toString());
 
         StringSubstitutor sub = new StringSubstitutor(parameters);
         return sub.replace(matchPath);

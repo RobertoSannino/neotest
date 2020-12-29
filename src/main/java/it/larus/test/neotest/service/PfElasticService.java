@@ -13,6 +13,7 @@ import it.larus.test.neotest.api.v2.NodeQuery;
 import it.larus.test.neotest.api.v2.QueryV2Api;
 import it.larus.test.neotest.exception.BadRequestException;
 import it.larus.test.neotest.exception.NotFoundException;
+import it.larus.test.neotest.validator.ParamValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.IterableUtils;
 import org.springframework.data.domain.Page;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
@@ -72,12 +74,13 @@ public class PfElasticService {
         GenericNeo4jRepository gnr = new GenericNeo4jRepository();
         StringBuilder query = new StringBuilder();
 
-        for (RelQuery relationshipQuery : queryV2Api.getRelQueries()) {
+        for (RelQuery rq : queryV2Api.getRelQueries()) {
             query.append(" \n").append(gnr.generateMatchPath(
-                    relationshipQuery.getId(),
-                    queryV2Api.getNodeQueries().stream().filter(nq -> nq.getId() == relationshipQuery.getStart()).findFirst().get(),
-                    queryV2Api.getNodeQueries().stream().filter(nq -> nq.getId() == relationshipQuery.getEnd()).findFirst().get(),
-                    relationshipQuery.getLabel()
+                    rq.getId(),
+                    queryV2Api.getNodeQueries().stream().filter(nq -> nq.getId() == rq.getStart()).findFirst().get(),
+                    queryV2Api.getNodeQueries().stream().filter(nq -> nq.getId() == rq.getEnd()).findFirst().get(),
+                    rq.getLabel(),
+                    rq.getMaxDepth()
             ));
         }
 
@@ -88,33 +91,38 @@ public class PfElasticService {
         log.info("Path results: {}", paths);
     }
 
-    public void resolveQuery(QueryV3Api queryV3Api, @Positive int limitNode, @Positive int limitRel) {
+    public List<Map<String, Object>> resolveQuery(QueryV3Api queryV3Api, @Positive int limitNode, @Positive int limitRel) {
+        ParamValidator.validateQueryV3Api(queryV3Api);
+
         GenericElasticRepository ger = new GenericElasticRepository();
-        queryV3Api.getNodeQueries().forEach(nq -> nq.setIdsXonarRequired(true));
+        queryV3Api.getNodeQueries().forEach(nq -> nq.setIdsXonarRequired(nonNull(nq.getQuery())));
 
         for (NodeQueryV3Api nodeQuery : queryV3Api.getNodeQueries()) {
-            String indexName = ElasticUtils.getIndexForLabel(nodeQuery.getLabel());
-            List<String> xonarIds = ger.getIdsFor(indexName, nodeQuery.getLabel(), nodeQuery.getQuery(), limitNode);
-            log.info("IDs for {}-{}: {}", nodeQuery.getId(), nodeQuery.getLabel(), xonarIds);
-            nodeQuery.setIdsXonar(xonarIds);
+            if (nonNull(nodeQuery.getQuery())) {
+                String indexName = ElasticUtils.getIndexForLabel(nodeQuery.getLabel());
+                List<String> xonarIds = ger.getIdsFor(indexName, nodeQuery.getLabel(), nodeQuery.getQuery(), limitNode);
+                log.info("IDs for {}-{}: {}", nodeQuery.getId(), nodeQuery.getLabel(), xonarIds);
+                nodeQuery.setIdsXonar(xonarIds);
+            }
         }
 
         GenericNeo4jRepository gnr = new GenericNeo4jRepository();
         StringBuilder query = new StringBuilder();
 
-        for (RelQuery relationshipQuery : queryV3Api.getRelQueries()) {
-            NodeQuery startNode = queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId().equals(relationshipQuery.getStart())).findFirst().get();
-            NodeQuery endNode = queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId().equals(relationshipQuery.getEnd())).findFirst().get();
-            query.append(" \n").append(gnr.generateMatchPath(relationshipQuery.getId(), startNode, endNode, relationshipQuery.getLabel()));
+        for (RelQuery rq : queryV3Api.getRelQueries()) {
+            NodeQuery startNode = queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId().equals(rq.getStart())).findFirst().get();
+            NodeQuery endNode = queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId().equals(rq.getEnd())).findFirst().get();
+            query.append(" \n").append(gnr.generateMatchPath(rq.getId(), startNode, endNode, rq.getLabel(), rq.getMaxDepth()));
         }
 
-        query.append("\nRETURN " + queryV3Api.getReturnCond());
+        query.append("\nRETURN " + (isNull(queryV3Api.getReturnCond()) ? " * " : queryV3Api.getReturnCond()));
         query.append("\nLIMIT " + limitRel);
 
         log.info("Query created: {}", query.toString());
         List<Map<String, Object>> paths = gnr.runCypherQuery(query.toString());
 
         log.info("Path results: {}", paths);
+        return paths;
     }
 
     private List<PfElastic> getPfBySearchType(String value, SearchType searchType, Pageable pageRequest,
