@@ -13,6 +13,7 @@ import it.larus.test.neotest.api.v2.NodeQuery;
 import it.larus.test.neotest.api.v2.QueryV2Api;
 import it.larus.test.neotest.exception.BadRequestException;
 import it.larus.test.neotest.exception.NotFoundException;
+import it.larus.test.neotest.util.ExpandPathUtil;
 import it.larus.test.neotest.validator.ParamValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.IterableUtils;
@@ -117,6 +118,31 @@ public class PfElasticService {
 
         query.append("\nRETURN " + (isNull(queryV3Api.getReturnCond()) ? " * " : queryV3Api.getReturnCond()));
         query.append("\nLIMIT " + limitRel);
+
+        log.info("Query created: {}", query.toString());
+        List<Map<String, Object>> paths = gnr.runCypherQuery(query.toString());
+
+        log.info("Path results: {}", paths);
+        return paths;
+    }
+
+    public List<Map<String, Object>> resolveExpandQuery(QueryV3Api queryV3Api, int limitNode, int limitRel) {
+        ParamValidator.validateQueryV3Api(queryV3Api);
+
+        GenericElasticRepository ger = new GenericElasticRepository();
+        queryV3Api.getNodeQueries().forEach(nq -> nq.setIdsXonarRequired(nonNull(nq.getQuery())));
+
+        for (NodeQueryV3Api nodeQuery : queryV3Api.getNodeQueries()) {
+            if (nonNull(nodeQuery.getQuery())) {
+                String indexName = ElasticUtils.getIndexForLabel(nodeQuery.getLabel());
+                List<String> xonarIds = ger.getIdsFor(indexName, nodeQuery.getLabel(), nodeQuery.getQuery(), limitNode);
+                log.info("IDs for {}-{}: {}", nodeQuery.getId(), nodeQuery.getLabel(), xonarIds);
+                nodeQuery.setIdsXonar(xonarIds);
+            }
+        }
+
+        GenericNeo4jRepository gnr = new GenericNeo4jRepository();
+        String query = ExpandPathUtil.generateExpandPathQuery(queryV3Api);
 
         log.info("Query created: {}", query.toString());
         List<Map<String, Object>> paths = gnr.runCypherQuery(query.toString());

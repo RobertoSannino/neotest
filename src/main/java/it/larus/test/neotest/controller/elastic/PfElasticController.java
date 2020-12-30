@@ -152,4 +152,22 @@ public class PfElasticController {
     ) {
         return elasticService.resolveQuery(queryV3Api, limitNode, limitRel).toString();
     }
+
+    @Operation(summary = "Search for entities in Elastic by ES queries, results are paginated" +
+            "and aggregated in terms of query logic")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Found Pfs and paths",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PfElastic.class)) }),
+            @ApiResponse(responseCode = "400", description = "Invalid searchType or pagination supplied",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "No results for the research",
+                    content = @Content) })
+    @PostMapping(path = "/elastic/v2/uffici-by-es-expand-queries", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String getEntitiesByESExpandQueries(@RequestBody QueryV3Api queryV3Api,
+                                         @RequestParam(name = "limit_nodes") @Positive int limitNode,
+                                         @RequestParam(name = "limit_rel") @Positive int limitRel
+    ) {
+        return elasticService.resolveExpandQuery(queryV3Api, limitNode, limitRel).toString();
+    }
 }

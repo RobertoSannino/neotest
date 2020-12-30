@@ -1,6 +1,5 @@
 package it.larus.test.neotest.validator;
 
-import it.larus.test.neotest.api.v2.RelQuery;
 import it.larus.test.neotest.api.v3.v2.QueryV3Api;
 import it.larus.test.neotest.exception.BadRequestException;
 
