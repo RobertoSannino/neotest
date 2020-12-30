@@ -1,5 +1,6 @@
 package it.larus.test.neotest.validator;
 
+import it.larus.test.neotest.api.v2.RelQuery;
 import it.larus.test.neotest.api.v3.v2.QueryV3Api;
 import it.larus.test.neotest.exception.BadRequestException;
 
@@ -28,7 +29,7 @@ public class ParamValidator {
         }
         if (queryV3Api.getRelQueries().stream().anyMatch(rq ->
                 (isNull(rq.getLabel()) && rq.getMaxDepth() <= 0) ||
-                (nonNull(rq.getLabel()) && rq.getMaxDepth() >= 0))
+                (nonNull(rq.getLabel()) && rq.getMaxDepth() > 0))
         ) {
             throw new BadRequestException("RelQueries \"label\" and \"maxDepth\" are mutually exclusive, populate one of them");
         }
