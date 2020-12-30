@@ -51,7 +51,6 @@ public class ExpandPathUtil {
                     "YIELD path as ${pathName}";
 
     private static String generateExpandPath(List<NodeQueryV3Api> nodeQueries, List<RelQuery> relQueries) {
-        relQueries.sort(Comparator.comparing(RelQuery::getStart));
         StringBuilder expandPaths = new StringBuilder("");
 
         for (int i = 0; i < relQueries.size(); i++) {

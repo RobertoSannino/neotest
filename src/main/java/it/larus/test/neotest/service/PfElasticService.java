@@ -127,7 +127,7 @@ public class PfElasticService {
     }
 
     public List<Map<String, Object>> resolveExpandQuery(QueryV3Api queryV3Api, int limitNode, int limitRel) {
-        ParamValidator.validateQueryV3Api(queryV3Api);
+        ParamValidator.validateQueryV3Api_ExtendVersion(queryV3Api);
 
         GenericElasticRepository ger = new GenericElasticRepository();
         queryV3Api.getNodeQueries().forEach(nq -> nq.setIdsXonarRequired(nonNull(nq.getQuery())));
