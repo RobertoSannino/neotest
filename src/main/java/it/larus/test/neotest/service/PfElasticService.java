@@ -126,11 +126,11 @@ public class PfElasticService {
         return paths;
     }
 
-    public List<Map<String, Object>> resolveExpandQuery(List<QueryV3Api> queries, int limitNode, int limitRel) {
+    public List<Map<String, Object>> resolveExpandQuery(List<QueryV3Api> queries, int limitNode, int limitRel, List<String> groups) {
         StringBuilder queryBuilder = new StringBuilder();
         for (int i = 0; i < queries.size(); ++i) {
             QueryV3Api queryV3Api = queries.get(i);
-            ParamValidator.validateQueryV3Api_ExtendVersion(queryV3Api);
+            ParamValidator.validateQueryV3Api_ExtendVersion(queryV3Api, groups);
 
             GenericElasticRepository ger = new GenericElasticRepository();
             queryV3Api.getNodeQueries().forEach(nq -> nq.setIdsXonarRequired(nonNull(nq.getQuery())));
@@ -145,7 +145,7 @@ public class PfElasticService {
             }
 
             ExpandPathUtil expandPathUtil = new ExpandPathUtil();
-            String query = expandPathUtil.generateExpandPathQuery(queryV3Api);
+            String query = expandPathUtil.generateExpandPathQuery(queryV3Api, groups);
             queryBuilder.append(query);
             if (i != queries.size() - 1) {
                 queryBuilder.append("\nUNION\n");

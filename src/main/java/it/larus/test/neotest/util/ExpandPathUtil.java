@@ -10,6 +10,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
 @Slf4j
 public class ExpandPathUtil {
@@ -36,15 +38,15 @@ public class ExpandPathUtil {
         return String.join(",", union);
     }
 
-    public String generateExpandPathQuery(QueryV3Api queryV3Api) {
-        String matchPaths = generateMatchPath(queryV3Api.getNodeQueries());
-        String expandPaths = generateExpandPath(queryV3Api.getNodeQueries(), queryV3Api.getRelQueries());
+    public String generateExpandPathQuery(QueryV3Api queryV3Api, List<String> groups) {
+        String matchPaths = generateMatchPath(queryV3Api.getNodeQueries(), groups);
+        String expandPaths = generateExpandPath(queryV3Api.getNodeQueries(), queryV3Api.getRelQueries(), groups);
         return "\n" + matchPaths + expandPaths + "RETURN " + queryV3Api.getReturnCond();
     }
 
-    private static final String MATCH_PROTOTYPE = "MATCH (${startName}:${startLabel}) WHERE ${startName}.${startId} IN ${listStartNodeIds}";
+    private static final String MATCH_PROTOTYPE = "MATCH (${startName}:${startLabel}${groupLabels}) WHERE ${startName}.${startId} IN ${listStartNodeIds}";
 
-    private String generateMatchPath(List<NodeQueryV3Api> nodeQueries) {
+    private String generateMatchPath(List<NodeQueryV3Api> nodeQueries, List<String> groups) {
         StringBuilder matchPaths = new StringBuilder("");
         for (NodeQueryV3Api nq : nodeQueries) {
             if (nonNull(nq.getQuery())) {
@@ -54,6 +56,7 @@ public class ExpandPathUtil {
                 HashMap<String, String> parameters = new HashMap<>();
                 parameters.put("startName", nq.getId());
                 parameters.put("startLabel", nq.getLabel());
+                parameters.put("groupLabels", emptyIfNull(groups).stream().map(g -> ":" + g).reduce((g1,g2) -> g1 + g2).orElse(""));
                 parameters.put("startId", ElasticUtils.getIdNameForLabel(nq.getLabel()));
                 parameters.put("listStartNodeIds", nq.getIdsXonar().stream().map(ids -> "'"+ids+"'").collect(Collectors.toList()).toString());
 
@@ -67,7 +70,7 @@ public class ExpandPathUtil {
     private static final String EXPAND_PROTOTYPE_TERMINATION_LABELS =
             "CALL apoc.path.expandConfig(${startNode}, {\n" +
                     "    relationshipFilter: '${relFilter}',\n" +
-                    "    labelFilter: '>${termLabelFilter}',\n" + // -${blackLabelFilter}
+                    "    labelFilter: '+${whitelistLabels}|>${termLabelFilter}',\n" +
                     "    minLevel: ${minLevel},\n" +
                     "    maxLevel: ${maxLevel}\n" +
                     "})\n" +
@@ -77,14 +80,14 @@ public class ExpandPathUtil {
     private static final String EXPAND_PROTOTYPE_TERMINATION_NODES =
             "CALL apoc.path.expandConfig(${startNode}, {\n" +
                     "    relationshipFilter: '${relFilter}',\n" +
-                    "    labelFilter: '',\n" + // -${blackLabelFilter}
+                    "    labelFilter: '+${whitelistLabels}',\n" +
                     "    minLevel: ${minLevel},\n" +
                     "    maxLevel: ${maxLevel},\n" +
                     "    terminationNodes: [${endNode}]\n" +
                     "})\n" +
                     "YIELD path as ${pathName}";
 
-    private String generateExpandPath(List<NodeQueryV3Api> nodeQueries, List<RelQuery> relQueries) {
+    private String generateExpandPath(List<NodeQueryV3Api> nodeQueries, List<RelQuery> relQueries, List<String> groups) {
         StringBuilder expandPaths = new StringBuilder("");
 
         for (int i = 0; i < relQueries.size(); i++) {
@@ -97,15 +100,19 @@ public class ExpandPathUtil {
             String endVariableLabel = nodeQueries.stream().filter(nq -> nq.getId().equals(endVariableName)).findFirst().get().getLabel();
             boolean endVariableDeclared = isVariableDeclared(endVariableName);
 
+            String whitelistLabels = emptyIfNull(groups).stream().map(g -> g + ":").reduce((g1, g2) -> g1 + g2).orElse("");
+            whitelistLabels = whitelistLabels.equals("") ? "" : whitelistLabels.substring(0, whitelistLabels.lastIndexOf(":"));
+
             HashMap<String, String> parameters = new HashMap<>();
             // si fà l'assunzione che almeno lo start node sia stato definito con una query, secondo me và messo quasi come vincolo altrimenti usi neo4j e ciao
             parameters.put("startNode", rq.getStart());
             parameters.put("relFilter", nonNull(rq.getLabel()) ? rq.getLabel() + ">" : ">");
 
             if (!endVariableDeclared) {
-                parameters.put("termLabelFilter", endVariableLabel);
+                parameters.put("termLabelFilter", endVariableLabel + ":" + whitelistLabels);
             }
             parameters.put("endNode", endVariableName);
+            parameters.put("whitelistLabels", whitelistLabels);
             parameters.put("minLevel", "1");
             parameters.put("maxLevel", String.valueOf(Math.max(1, rq.getMaxDepth())));
             parameters.put("pathName", rq.getId());

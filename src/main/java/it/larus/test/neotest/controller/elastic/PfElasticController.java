@@ -171,6 +171,6 @@ public class PfElasticController {
             @RequestParam(name = "limit_rel") @Positive int limitRel
     ) {
         log.warn("HEADER group: {}", groups.toString());
-        return elasticService.resolveExpandQuery(queries, limitNode, limitRel).toString();
+        return elasticService.resolveExpandQuery(queries, limitNode, limitRel, groups).toString();
     }
 }
