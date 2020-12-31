@@ -126,26 +126,34 @@ public class PfElasticService {
         return paths;
     }
 
-    public List<Map<String, Object>> resolveExpandQuery(QueryV3Api queryV3Api, int limitNode, int limitRel) {
-        ParamValidator.validateQueryV3Api_ExtendVersion(queryV3Api);
+    public List<Map<String, Object>> resolveExpandQuery(List<QueryV3Api> queries, int limitNode, int limitRel) {
+        StringBuilder queryBuilder = new StringBuilder();
+        for (int i = 0; i < queries.size(); ++i) {
+            QueryV3Api queryV3Api = queries.get(i);
+            ParamValidator.validateQueryV3Api_ExtendVersion(queryV3Api);
 
-        GenericElasticRepository ger = new GenericElasticRepository();
-        queryV3Api.getNodeQueries().forEach(nq -> nq.setIdsXonarRequired(nonNull(nq.getQuery())));
+            GenericElasticRepository ger = new GenericElasticRepository();
+            queryV3Api.getNodeQueries().forEach(nq -> nq.setIdsXonarRequired(nonNull(nq.getQuery())));
 
-        for (NodeQueryV3Api nodeQuery : queryV3Api.getNodeQueries()) {
-            if (nonNull(nodeQuery.getQuery())) {
-                String indexName = ElasticUtils.getIndexForLabel(nodeQuery.getLabel());
-                List<String> xonarIds = ger.getIdsFor(indexName, nodeQuery.getLabel(), nodeQuery.getQuery(), limitNode);
-                log.info("IDs for {}-{}: {}", nodeQuery.getId(), nodeQuery.getLabel(), xonarIds);
-                nodeQuery.setIdsXonar(xonarIds);
+            for (NodeQueryV3Api nodeQuery : queryV3Api.getNodeQueries()) {
+                if (nonNull(nodeQuery.getQuery())) {
+                    String indexName = ElasticUtils.getIndexForLabel(nodeQuery.getLabel());
+                    List<String> xonarIds = ger.getIdsFor(indexName, nodeQuery.getLabel(), nodeQuery.getQuery(), limitNode);
+                    log.info("IDs for {}-{}: {}", nodeQuery.getId(), nodeQuery.getLabel(), xonarIds);
+                    nodeQuery.setIdsXonar(xonarIds);
+                }
+            }
+
+            String query = ExpandPathUtil.generateExpandPathQuery(queryV3Api);
+            queryBuilder.append(query);
+            if (i != queries.size() - 1) {
+                queryBuilder.append("\nUNION\n");
             }
         }
 
+        log.info("Query created: {}", queryBuilder.toString());
         GenericNeo4jRepository gnr = new GenericNeo4jRepository();
-        String query = ExpandPathUtil.generateExpandPathQuery(queryV3Api);
-
-        log.info("Query created: {}", query.toString());
-        List<Map<String, Object>> paths = gnr.runCypherQuery(query.toString());
+        List<Map<String, Object>> paths = gnr.runCypherQuery(queryBuilder.toString());
 
         log.info("Path results: {}", paths);
         return paths;

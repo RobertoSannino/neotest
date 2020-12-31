@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringSubstitutor;
 import org.neo4j.driver.*;
 import org.neo4j.driver.Record;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,7 +25,7 @@ public class GenericNeo4jRepository {
     private final Driver driver;
 
     public GenericNeo4jRepository() {
-        driver = GraphDatabase.driver( "bolt://localhost:7687", AuthTokens.basic( "neo4j", "secret" ) );
+        driver = GraphDatabase.driver( "bolt://localhost:7687", AuthTokens.basic( "neo4j", "a" ) );
     }
 
     public List<Map<String, Object>> runCypherQuery(String query ) {
