@@ -126,8 +126,8 @@ public class PfElasticService {
         return paths;
     }
 
-    public List<Map<String, Object>> resolveExpandQuery(QueryV3Api queryV3Api, int limitNode, int limitRel) {
-        ParamValidator.validateQueryV3Api_ExtendVersion(queryV3Api);
+    public List<Map<String, Object>> resolveExpandQuery(QueryV3Api queryV3Api, int limitNode, int limitRel, List<String> groups) {
+        ParamValidator.validateQueryV3Api_ExtendVersion(queryV3Api, groups);
 
         GenericElasticRepository ger = new GenericElasticRepository();
         queryV3Api.getNodeQueries().forEach(nq -> nq.setIdsXonarRequired(nonNull(nq.getQuery())));
@@ -142,7 +142,7 @@ public class PfElasticService {
         }
 
         GenericNeo4jRepository gnr = new GenericNeo4jRepository();
-        String query = ExpandPathUtil.generateExpandPathQuery(queryV3Api);
+        String query = ExpandPathUtil.generateExpandPathQuery(queryV3Api, groups);
 
         log.info("Query created: {}", query.toString());
         List<Map<String, Object>> paths = gnr.runCypherQuery(query.toString());

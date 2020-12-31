@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
+import static org.apache.logging.log4j.ThreadContext.isEmpty;
 
 @Slf4j
 @RestController
@@ -171,6 +172,6 @@ public class PfElasticController {
             @RequestParam(name = "limit_rel") @Positive int limitRel
     ) {
         log.warn("HEADER group: {}", groups.toString());
-        return elasticService.resolveExpandQuery(queryV3Api, limitNode, limitRel).toString();
+        return elasticService.resolveExpandQuery(queryV3Api, limitNode, limitRel, groups).toString();
     }
 }

@@ -4,6 +4,7 @@ import it.larus.test.neotest.api.v3.v2.NodeQueryV3Api;
 import it.larus.test.neotest.api.v3.v2.QueryV3Api;
 import it.larus.test.neotest.exception.BadRequestException;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -46,8 +47,13 @@ public class ParamValidator {
         }
     }
 
-    public static void validateQueryV3Api_ExtendVersion(QueryV3Api queryV3Api) {
+    public static void validateQueryV3Api_ExtendVersion(QueryV3Api queryV3Api, List<String> groups) {
         validateQueryV3Api(queryV3Api);
+
+        // check non-empty groups
+        if (isEmpty(groups)) {
+            throw new BadRequestException("Groups must be provided in order to perform a query");
+        }
         // check starting node for expand has query
         Optional<NodeQueryV3Api> firstStartNode = queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId().equals(queryV3Api.getRelQueries().get(0).getStart())).findFirst();
         if (!firstStartNode.isPresent() || isNull(firstStartNode.get().getQuery())) {
