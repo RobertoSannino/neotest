@@ -144,7 +144,8 @@ public class PfElasticService {
                 }
             }
 
-            String query = ExpandPathUtil.generateExpandPathQuery(queryV3Api);
+            ExpandPathUtil expandPathUtil = new ExpandPathUtil();
+            String query = expandPathUtil.generateExpandPathQuery(queryV3Api);
             queryBuilder.append(query);
             if (i != queries.size() - 1) {
                 queryBuilder.append("\nUNION\n");
