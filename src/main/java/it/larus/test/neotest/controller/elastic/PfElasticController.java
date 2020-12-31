@@ -164,10 +164,13 @@ public class PfElasticController {
             @ApiResponse(responseCode = "404", description = "No results for the research",
                     content = @Content) })
     @PostMapping(path = "/elastic/v2/uffici-by-es-expand-queries", produces = MediaType.APPLICATION_JSON_VALUE)
-    public String getEntitiesByESExpandQueries(@RequestBody QueryV3Api queryV3Api,
-                                         @RequestParam(name = "limit_nodes") @Positive int limitNode,
-                                         @RequestParam(name = "limit_rel") @Positive int limitRel
+    public String getEntitiesByESExpandQueries(
+            @RequestHeader List<String> groups,
+            @RequestBody QueryV3Api queryV3Api,
+            @RequestParam(name = "limit_nodes") @Positive int limitNode,
+            @RequestParam(name = "limit_rel") @Positive int limitRel
     ) {
+        log.warn("HEADER group: {}", groups.toString());
         return elasticService.resolveExpandQuery(queryV3Api, limitNode, limitRel).toString();
     }
 }
