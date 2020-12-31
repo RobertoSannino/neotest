@@ -1,13 +1,11 @@
 package it.larus.test.neotest.ogm.repository;
 
-import it.larus.test.neotest.api.v3.v2.OrderByNode;
-import it.larus.test.neotest.util.ElasticUtils;
 import it.larus.test.neotest.api.v2.NodeQuery;
+import it.larus.test.neotest.util.ElasticUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringSubstitutor;
-import org.neo4j.driver.*;
 import org.neo4j.driver.Record;
-import org.springframework.beans.factory.annotation.Value;
+import org.neo4j.driver.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +23,7 @@ public class GenericNeo4jRepository {
     private final Driver driver;
 
     public GenericNeo4jRepository() {
-        driver = GraphDatabase.driver( "bolt://localhost:7687", AuthTokens.basic( "neo4j", "a" ) );
+        driver = GraphDatabase.driver( "bolt://localhost:7687", AuthTokens.basic( "neo4j", "secret" ) );
     }
 
     public List<Map<String, Object>> runCypherQuery(String query ) {

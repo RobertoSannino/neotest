@@ -38,18 +38,22 @@ public class ParamValidator {
         if (queryV3Api.getNodeQueries().stream().anyMatch(nq -> isNull(nq.getLabel()))) {
             throw new BadRequestException("NodeQueries \"labels\" are mandatory");
         }
-        // check relQueries label and maxDepth mutually-exclusive
+        // check relQueries label and depth mutually-exclusive
         if (queryV3Api.getRelQueries().stream().anyMatch(rq ->
-                (isNull(rq.getLabel()) && rq.getMaxDepth() <= 0) ||
-                (nonNull(rq.getLabel()) && rq.getMaxDepth() > 0))
+                (isNull(rq.getLabel()) && (isNull(rq.getMaxDepth()) && isNull(rq.getMinDepth()))) ||
+                (nonNull(rq.getLabel()) && (nonNull(rq.getMaxDepth()) || nonNull(rq.getMinDepth()))))
         ) {
-            throw new BadRequestException("RelQueries \"label\" and \"maxDepth\" are mutually exclusive, populate one of them");
+            throw new BadRequestException("RelQueries \"label\" and \"maxDepth\" | \"minDepth\" are mutually exclusive, populate one of them");
         }
     }
 
     public static void validateQueryV3Api_ExtendVersion(QueryV3Api queryV3Api, List<String> groups) {
         validateQueryV3Api(queryV3Api);
 
+        // check min and maxDepth
+        if (queryV3Api.getRelQueries().stream().anyMatch(rq -> nonNull(rq.getMinDepth()) && nonNull(rq.getMaxDepth()) && rq.getMinDepth() > rq.getMaxDepth())) {
+            throw new BadRequestException("\"maxDepth\" must be greater or equal than \"minDepth\"");
+        }
         // check non-empty groups
         if (isEmpty(groups)) {
             throw new BadRequestException("Groups must be provided in order to perform a query");

@@ -14,7 +14,7 @@ import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
 @Slf4j
-public class ExpandPathUtil {
+public class PathExpander {
 
     private final Set<String> declaredVariables = new HashSet<>();
     private final Set<String> declaredPaths = new HashSet<>();
@@ -35,7 +35,7 @@ public class ExpandPathUtil {
         Set<String> union = new HashSet<>(this.declaredVariables);
         union.addAll(this.declaredPaths);
 
-        return String.join(",", union);
+        return String.join(", ", union);
     }
 
     public String generateExpandPathQuery(QueryV3Api queryV3Api, List<String> groups) {
@@ -72,10 +72,11 @@ public class ExpandPathUtil {
                     "    relationshipFilter: '${relFilter}',\n" +
                     "    labelFilter: '+${whitelistLabels}|>${termLabelFilter}',\n" +
                     "    minLevel: ${minLevel},\n" +
-                    "    maxLevel: ${maxLevel}\n" +
+                    "    maxLevel: ${maxLevel},\n" +
+                    "    optional: ${optional}\n" +
                     "})\n" +
                     "YIELD path as ${pathName}\n" +
-                    "WITH LAST(NODES(${pathName})) AS ${endNode}\n";
+                    "WITH LAST(NODES(${pathName})) AS ${endNode}";
 
     private static final String EXPAND_PROTOTYPE_TERMINATION_NODES =
             "CALL apoc.path.expandConfig(${startNode}, {\n" +
@@ -83,6 +84,7 @@ public class ExpandPathUtil {
                     "    labelFilter: '+${whitelistLabels}',\n" +
                     "    minLevel: ${minLevel},\n" +
                     "    maxLevel: ${maxLevel},\n" +
+                    "    optional: ${optional},\n" +
                     "    terminationNodes: [${endNode}]\n" +
                     "})\n" +
                     "YIELD path as ${pathName}";
@@ -113,15 +115,16 @@ public class ExpandPathUtil {
             }
             parameters.put("endNode", endVariableName);
             parameters.put("whitelistLabels", whitelistLabels);
-            parameters.put("minLevel", "1");
+            parameters.put("minLevel", String.valueOf(rq.getMinDepth()));
             parameters.put("maxLevel", String.valueOf(Math.max(1, rq.getMaxDepth())));
+            parameters.put("optional", String.valueOf(rq.isOptional()));
             parameters.put("pathName", rq.getId());
 
             StringSubstitutor sub = new StringSubstitutor(parameters);
             String prototype = EXPAND_PROTOTYPE_TERMINATION_NODES;
             if (!endVariableDeclared) {
                 String declarations = getDeclarations();
-                declarations = declarations.length() != 0 ? ", " + declarations : "";
+                declarations = declarations.length() != 0 ? ", " + declarations : "\n";
                 prototype = EXPAND_PROTOTYPE_TERMINATION_LABELS + declarations + "\n";
             }
             expandPaths.append(sub.replace(prototype)).append(" \n");

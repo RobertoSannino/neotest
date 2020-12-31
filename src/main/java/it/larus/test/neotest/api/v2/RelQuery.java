@@ -11,7 +11,9 @@ public class RelQuery {
     String label;
     String start;
     String end;
-    int maxDepth;
+    Integer minDepth = null;
+    Integer maxDepth = null;
+    boolean optional = false;
     List<QueryConstraint> constraints;
 
 }

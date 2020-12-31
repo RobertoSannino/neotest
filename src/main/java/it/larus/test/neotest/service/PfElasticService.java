@@ -13,7 +13,7 @@ import it.larus.test.neotest.api.v2.NodeQuery;
 import it.larus.test.neotest.api.v2.QueryV2Api;
 import it.larus.test.neotest.exception.BadRequestException;
 import it.larus.test.neotest.exception.NotFoundException;
-import it.larus.test.neotest.util.ExpandPathUtil;
+import it.larus.test.neotest.util.PathExpander;
 import it.larus.test.neotest.validator.ParamValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.IterableUtils;
@@ -26,6 +26,7 @@ import java.text.MessageFormat;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 import static java.util.Objects.isNull;
@@ -132,6 +133,13 @@ public class PfElasticService {
             QueryV3Api queryV3Api = queries.get(i);
             ParamValidator.validateQueryV3Api_ExtendVersion(queryV3Api, groups);
 
+            queryV3Api.getRelQueries().forEach(
+                    rq -> {
+                        rq.setMinDepth(Optional.ofNullable(rq.getMinDepth()).orElse(1));
+                        rq.setMaxDepth(Optional.ofNullable(rq.getMaxDepth()).orElse(1));
+                    }
+            );
+
             GenericElasticRepository ger = new GenericElasticRepository();
             queryV3Api.getNodeQueries().forEach(nq -> nq.setIdsXonarRequired(nonNull(nq.getQuery())));
 
@@ -144,7 +152,7 @@ public class PfElasticService {
                 }
             }
 
-            ExpandPathUtil expandPathUtil = new ExpandPathUtil();
+            PathExpander expandPathUtil = new PathExpander();
             String query = expandPathUtil.generateExpandPathQuery(queryV3Api, groups);
             queryBuilder.append(query);
             if (i != queries.size() - 1) {
