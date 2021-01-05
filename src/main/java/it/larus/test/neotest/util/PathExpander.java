@@ -42,13 +42,13 @@ public class PathExpander {
     public String generateExpandPathQuery(QueryV3Api queryV3Api, List<String> groups) {
         String matchPaths = generateMatchPath(queryV3Api.getNodeQueries(), groups);
         String expandPaths = generateExpandPath(queryV3Api.getNodeQueries(), queryV3Api.getRelQueries(), groups);
-        String query = "\n" + matchPaths + expandPaths + "RETURN " + queryV3Api.getReturnCond();
+        String q = "\n" + matchPaths + expandPaths + "RETURN " + queryV3Api.getReturnCond();
         if (nonNull(queryV3Api.getOrderByNodes())) {
-            query += " ORDER BY ";
+            q += " ORDER BY ";
             String orderByString = queryV3Api.getOrderByNodes().stream().map(this::generateOrderBy).collect(Collectors.toList()).toString();
-            query += orderByString.substring(1, orderByString.length() - 1);
+            q += orderByString.substring(1, orderByString.length() - 1);
         }
-        return query;
+        return q;
     }
 
     private static final String MATCH_PROTOTYPE = "MATCH (${startName}:${startLabel}${groupLabels}) WHERE ${startName}.${startId} IN ${listStartNodeIds}";
@@ -145,10 +145,11 @@ public class PathExpander {
     }
 
     public String generateOrderBy(OrderByNode node) {
-        String orderByPart = "${idAndAttr}";
+        String orderByPart = "${id}.${attr}";
 
         HashMap<String, String> parameters = new HashMap<>();
-        parameters.put("idAndAttr", node.getIdAndAttr());
+        parameters.put("id", node.getId());
+        parameters.put("attr", node.getAttr());
 
         StringSubstitutor sub = new StringSubstitutor(parameters);
         return sub.replace(orderByPart);
