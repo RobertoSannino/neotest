@@ -55,9 +55,9 @@ public class ParamValidator {
             throw new BadRequestException("\"maxDepth\" must be greater or equal than \"minDepth\"");
         }
         // check non-empty groups
-        if (isEmpty(groups)) {
-            throw new BadRequestException("Groups must be provided in order to perform a query");
-        }
+        //if (isEmpty(groups)) {
+        //    throw new BadRequestException("Groups must be provided in order to perform a query");
+        //}
         // check starting node for expand has query
         Optional<NodeQueryV3Api> firstStartNode = queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId().equals(queryV3Api.getRelQueries().get(0).getStart())).findFirst();
         if (!firstStartNode.isPresent() || isNull(firstStartNode.get().getQuery())) {

@@ -23,7 +23,7 @@ public class GenericNeo4jRepository {
     private final Driver driver;
 
     public GenericNeo4jRepository() {
-        driver = GraphDatabase.driver( "bolt://localhost:7687", AuthTokens.basic( "neo4j", "secret" ) );
+        driver = GraphDatabase.driver( "bolt://localhost:7687", AuthTokens.basic( "neo4j", "a" ) );
     }
 
     public List<Map<String, Object>> runCypherQuery(String query ) {

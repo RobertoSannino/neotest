@@ -1,6 +1,7 @@
 package it.larus.test.neotest.util;
 
 import it.larus.test.neotest.api.v2.RelQuery;
+import it.larus.test.neotest.api.v3.v2.GroupByNodes;
 import it.larus.test.neotest.api.v3.v2.NodeQueryV3Api;
 import it.larus.test.neotest.api.v3.v2.OrderByNode;
 import it.larus.test.neotest.api.v3.v2.QueryV3Api;
@@ -42,7 +43,13 @@ public class PathExpander {
     public String generateExpandPathQuery(QueryV3Api queryV3Api, List<String> groups) {
         String matchPaths = generateMatchPath(queryV3Api.getNodeQueries(), groups);
         String expandPaths = generateExpandPath(queryV3Api.getNodeQueries(), queryV3Api.getRelQueries(), groups);
-        String q = "\n" + matchPaths + expandPaths + "RETURN " + queryV3Api.getReturnCond();
+        String q = "\n" + matchPaths + expandPaths;
+        if (nonNull(queryV3Api.getGroupByNode())) {
+            q += "RETURN " + generateGroupBy(queryV3Api.getGroupByNode());
+        }
+        else {
+            q += "RETURN " + queryV3Api.getReturnCond();
+        }
         if (nonNull(queryV3Api.getOrderByNodes())) {
             q += " ORDER BY ";
             String orderByString = queryV3Api.getOrderByNodes().stream().map(this::generateOrderBy).collect(Collectors.toList()).toString();
@@ -153,5 +160,14 @@ public class PathExpander {
 
         StringSubstitutor sub = new StringSubstitutor(parameters);
         return sub.replace(orderByPart);
+    }
+
+    private String generateGroupBy(GroupByNodes groupByClause) {
+        String groupByPart = String.join(",", groupByClause.getAggr());
+        List<String> aggregated = groupByClause.getAggregated().stream().map(agg -> agg.getOperand() + "(" + agg.getField() + ")"  ).collect(Collectors.toList());
+
+        String aggregationPart = String.join(",", aggregated);
+
+        return groupByPart + "," + aggregationPart;
     }
 }
