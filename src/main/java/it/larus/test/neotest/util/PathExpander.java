@@ -2,6 +2,7 @@ package it.larus.test.neotest.util;
 
 import it.larus.test.neotest.api.v2.RelQuery;
 import it.larus.test.neotest.api.v3.v2.NodeQueryV3Api;
+import it.larus.test.neotest.api.v3.v2.OrderByNode;
 import it.larus.test.neotest.api.v3.v2.QueryV3Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringSubstitutor;
@@ -41,7 +42,13 @@ public class PathExpander {
     public String generateExpandPathQuery(QueryV3Api queryV3Api, List<String> groups) {
         String matchPaths = generateMatchPath(queryV3Api.getNodeQueries(), groups);
         String expandPaths = generateExpandPath(queryV3Api.getNodeQueries(), queryV3Api.getRelQueries(), groups);
-        return "\n" + matchPaths + expandPaths + "RETURN " + queryV3Api.getReturnCond();
+        String query = "\n" + matchPaths + expandPaths + "RETURN " + queryV3Api.getReturnCond();
+        if (nonNull(queryV3Api.getOrderByNodes())) {
+            query += " ORDER BY ";
+            String orderByString = queryV3Api.getOrderByNodes().stream().map(this::generateOrderBy).collect(Collectors.toList()).toString();
+            query += orderByString.substring(1, orderByString.length() - 1);
+        }
+        return query;
     }
 
     private static final String MATCH_PROTOTYPE = "MATCH (${startName}:${startLabel}${groupLabels}) WHERE ${startName}.${startId} IN ${listStartNodeIds}";
@@ -135,5 +142,15 @@ public class PathExpander {
         }
 
         return expandPaths.toString();
+    }
+
+    public String generateOrderBy(OrderByNode node) {
+        String orderByPart = "${idAndAttr}";
+
+        HashMap<String, String> parameters = new HashMap<>();
+        parameters.put("idAndAttr", node.getIdAndAttr());
+
+        StringSubstitutor sub = new StringSubstitutor(parameters);
+        return sub.replace(orderByPart);
     }
 }

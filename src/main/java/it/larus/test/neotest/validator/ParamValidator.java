@@ -64,8 +64,8 @@ public class ParamValidator {
             throw new BadRequestException("Starting node must have \"query\" populated");
         }
         // check nodes without query are not returned
-        Stream<NodeQueryV3Api> nodeQueryWithoutQuery = queryV3Api.getNodeQueries().stream().filter(nq -> isNull(nq.getQuery()));
+        /*Stream<NodeQueryV3Api> nodeQueryWithoutQuery = queryV3Api.getNodeQueries().stream().filter(nq -> isNull(nq.getQuery()));
         if (nodeQueryWithoutQuery.anyMatch(nq -> queryV3Api.getReturnCond().contains(nq.getId() + ","))) {
             throw new BadRequestException("Nodes without \"query\" cannot be returned as they do not be involved in match conditions");
-        }
+        }*/
     }}

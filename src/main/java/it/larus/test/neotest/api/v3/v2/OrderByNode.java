@@ -5,6 +5,5 @@ import lombok.Data;
 @Data
 public class OrderByNode {
 
-    long id;
-    String attr;
+    String idAndAttr;
 }
