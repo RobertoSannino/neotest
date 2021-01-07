@@ -68,4 +68,5 @@ public class ParamValidator {
         if (nodeQueryWithoutQuery.anyMatch(nq -> queryV3Api.getReturnCond().contains(nq.getId() + ","))) {
             throw new BadRequestException("Nodes without \"query\" cannot be returned as they do not be involved in match conditions");
         }*/
-    }}
+    }
+}

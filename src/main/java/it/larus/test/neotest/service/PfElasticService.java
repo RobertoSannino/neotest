@@ -14,6 +14,7 @@ import it.larus.test.neotest.api.v2.QueryV2Api;
 import it.larus.test.neotest.exception.BadRequestException;
 import it.larus.test.neotest.exception.NotFoundException;
 import it.larus.test.neotest.util.PathExpander;
+import it.larus.test.neotest.validator.InputQueryValidator;
 import it.larus.test.neotest.validator.ParamValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.IterableUtils;
@@ -94,6 +95,7 @@ public class PfElasticService {
     }
 
     public List<Map<String, Object>> resolveQuery(QueryV3Api queryV3Api, @Positive int limitNode, @Positive int limitRel) {
+        InputQueryValidator.isValid(queryV3Api);
         ParamValidator.validateQueryV3Api(queryV3Api);
 
         GenericElasticRepository ger = new GenericElasticRepository();
@@ -131,6 +133,7 @@ public class PfElasticService {
         StringBuilder queryBuilder = new StringBuilder();
         for (int i = 0; i < queries.size(); ++i) {
             QueryV3Api queryV3Api = queries.get(i);
+            InputQueryValidator.isValid(queryV3Api);
             ParamValidator.validateQueryV3Api_ExtendVersion(queryV3Api, groups);
 
             queryV3Api.getRelQueries().forEach(
