@@ -8,10 +8,18 @@ import java.util.List;
 public class GroupByNodes {
     @Data
     public static class Aggregated {
-        private String field;
+        private String id;
+        private String property;
         private String operand;
+        private String alias;
     }
 
-    private List<String> aggr;
-    private List<Aggregated> aggregated;
+    @Data
+    public static class Aggregation {
+        private String id;
+        private String property;
+    }
+
+    private List<Aggregation> by;
+    private List<Aggregated> aggregate;
 }

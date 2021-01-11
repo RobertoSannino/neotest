@@ -1,10 +1,13 @@
 package it.larus.test.neotest.validator;
 
+import it.larus.test.neotest.api.v3.v2.GroupByNodes;
 import it.larus.test.neotest.api.v3.v2.NodeQueryV3Api;
 import it.larus.test.neotest.api.v3.v2.QueryV3Api;
 import it.larus.test.neotest.exception.BadRequestException;
+import org.neo4j.ogm.exception.core.BaseClassNotFoundException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -62,6 +65,24 @@ public class ParamValidator {
         Optional<NodeQueryV3Api> firstStartNode = queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId().equals(queryV3Api.getRelQueries().get(0).getStart())).findFirst();
         if (!firstStartNode.isPresent() || isNull(firstStartNode.get().getQuery())) {
             throw new BadRequestException("Starting node must have \"query\" populated");
+        }
+
+        if (nonNull(queryV3Api.getGroupByNode())) {
+            boolean nullGroupById = queryV3Api.getGroupByNode().getBy().stream().map(GroupByNodes.Aggregation::getId).anyMatch(Objects::isNull);
+            boolean nullAggregateId = queryV3Api.getGroupByNode().getAggregate().stream().map(GroupByNodes.Aggregated::getId).anyMatch(Objects::isNull);
+            boolean nullAggregationOperand = queryV3Api.getGroupByNode().getAggregate().stream().map(GroupByNodes.Aggregated::getOperand).anyMatch(Objects::isNull);
+
+            if (nullGroupById) {
+                throw new BadRequestException("Group by id cannot be null");
+            }
+
+            if (nullAggregateId) {
+                throw new BadRequestException("Aggregate id cannot be null");
+            }
+
+            if (nullAggregationOperand) {
+                throw new BadRequestException("Aggregation operand cannot be null");
+            }
         }
         // check nodes without query are not returned
         /*Stream<NodeQueryV3Api> nodeQueryWithoutQuery = queryV3Api.getNodeQueries().stream().filter(nq -> isNull(nq.getQuery()));

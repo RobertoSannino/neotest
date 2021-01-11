@@ -24,36 +24,60 @@ public class InputQueryValidator {
     }
 
     private static void isValid(NodeQueryV3Api nodeQuery) {
-        isValid(nodeQuery.getId());
-        isValid(nodeQuery.getLabel());
+        if (nonNull(nodeQuery)) {
+            isValid(nodeQuery.getId());
+            isValid(nodeQuery.getLabel());
+        }
     }
 
     public static void isValid(RelQuery relQuery) {
-        isValid(relQuery.getId());
-        isValid(relQuery.getStart());
-        isValid(relQuery.getEnd());
+        if (nonNull(relQuery)) {
+            isValid(relQuery.getId());
+            isValid(relQuery.getStart());
+            isValid(relQuery.getEnd());
+        }
     }
 
     public static void isValid(OrderByNode orderByNode) {
-        isValid(orderByNode.getId());
-        isValid(orderByNode.getAttr());
+        if (nonNull(orderByNode)) {
+            isValid(orderByNode.getId());
+            isValid(orderByNode.getAttr());
+        }
     }
 
     public static void isValid(GroupByNodes groupByNodes) {
-        groupByNodes.getAggr().forEach(InputQueryValidator::isValid);
-        groupByNodes.getAggregated().forEach(InputQueryValidator::isValid);
+        if (nonNull(groupByNodes)) {
+            groupByNodes.getBy().forEach(InputQueryValidator::isValid);
+            groupByNodes.getAggregate().forEach(InputQueryValidator::isValid);
+        }
     }
 
     private static void isValid(GroupByNodes.Aggregated aggregated) {
-        isValid(aggregated.getField());
-        isValid(aggregated.getOperand()); // TODO check if the operand belongs to a set of allowed operands
+        if (nonNull(aggregated)) {
+            isValid(aggregated.getProperty());
+            isValid(aggregated.getOperand()); // TODO check if the operand belongs to a set of allowed operands
+            isValid(aggregated.getAlias());
+        }
+    }
+
+    private static void isValid(GroupByNodes.Aggregation aggregation) {
+        if (nonNull(aggregation)) {
+            isValid(aggregation.getProperty());
+            isValid(aggregation.getId());
+        }
     }
 
     public static void isValid(QueryV3Api inputQuery) {
-        inputQuery.getNodeQueries().forEach(InputQueryValidator::isValid);
-        inputQuery.getRelQueries().forEach(InputQueryValidator::isValid);
-        inputQuery.getOrderByNodes().forEach(InputQueryValidator::isValid);
+        if (nonNull(inputQuery.getNodeQueries())) {
+            inputQuery.getNodeQueries().forEach(InputQueryValidator::isValid);
+        }
+
+        if (nonNull(inputQuery.getRelQueries())) {
+            inputQuery.getRelQueries().forEach(InputQueryValidator::isValid);
+        }
+        if (nonNull(inputQuery.getOrderByNodes())) {
+            inputQuery.getOrderByNodes().forEach(InputQueryValidator::isValid);
+        }
         isValid(inputQuery.getGroupByNode());
     }
-
 }

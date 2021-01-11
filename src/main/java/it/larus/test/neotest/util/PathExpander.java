@@ -12,7 +12,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
-import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
 @Slf4j
@@ -106,9 +105,7 @@ public class PathExpander {
     private String generateExpandPath(List<NodeQueryV3Api> nodeQueries, List<RelQuery> relQueries, List<String> groups) {
         StringBuilder expandPaths = new StringBuilder("");
 
-        for (int i = 0; i < relQueries.size(); i++) {
-            RelQuery rq = relQueries.get(i);
-
+        for (RelQuery rq : relQueries) {
             // Declare current path
             declarePath(rq.getId());
 
@@ -163,11 +160,21 @@ public class PathExpander {
     }
 
     private String generateGroupBy(GroupByNodes groupByClause) {
-        String groupByPart = String.join(",", groupByClause.getAggr());
-        List<String> aggregated = groupByClause.getAggregated().stream().map(agg -> agg.getOperand() + "(" + agg.getField() + ")"  ).collect(Collectors.toList());
+        List<String> groupByIdsAndProps = groupByClause.getBy().stream().map(by -> {
+           return by.getId() + (nonNull(by.getProperty()) ? "." + by.getProperty() : "");
+        }).collect(Collectors.toList());
 
-        String aggregationPart = String.join(",", aggregated);
+        List<String> aggregatedIdsAndProps = groupByClause.getAggregate().stream().map(agg -> {
+           String idAndProp = agg.getId() + (nonNull(agg.getProperty()) ? agg.getProperty() : "");
 
-        return groupByPart + "," + aggregationPart;
+           String alias = nonNull(agg.getAlias()) ? " AS " + agg.getAlias() : "";
+
+           return agg.getOperand() + "(" + idAndProp + ")" + alias;
+        }).collect(Collectors.toList());
+
+        String groupByPart = String.join(",", groupByIdsAndProps);
+        String aggregationPart = String.join(",", aggregatedIdsAndProps);
+
+        return groupByPart + ", " + aggregationPart;
     }
 }
