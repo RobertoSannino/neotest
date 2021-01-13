@@ -3,6 +3,9 @@ package it.larus.test.neotest.ogm.repository;
 import com.google.gson.Gson;
 import it.larus.test.neotest.api.v2.NodeQuery;
 import it.larus.test.neotest.util.ElasticUtils;
+import it.larus.test.neotest.util.GenericQueryJsonExportUtils;
+import it.larus.test.neotest.util.Node;
+import it.larus.test.neotest.util.Relationship;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringSubstitutor;
 import org.neo4j.driver.Record;
@@ -24,7 +27,7 @@ public class GenericNeo4jRepository {
     private final Driver driver;
 
     public GenericNeo4jRepository() {
-        driver = GraphDatabase.driver( "bolt://localhost:7687", AuthTokens.basic( "neo4j", "a" ) );
+        driver = GraphDatabase.driver( "bolt://localhost:7687", AuthTokens.basic( "neo4j", "matrix" ) );
     }
 
     public List<Map<String, Object>> runCypherQuery(String query ) {
@@ -39,6 +42,26 @@ public class GenericNeo4jRepository {
                 return queryResult.list().stream().map(Record::asMap).collect(Collectors.toList());
             });
             results.forEach(r -> log.info(r.toString()));
+        }
+
+        return results;
+    }
+
+    public Map<String, Object> runCypherQueryFillOut(String query ) {
+        Map<String, Object> results;
+        try (Session session = driver.session()) {
+            results = session.readTransaction(tx -> {
+                Result queryResult = tx.run(
+                        query,
+                        parameters("message", query));
+                Map<String, Object> resultsMap = new HashMap<>();
+                final Map<String, Node> nodesRes = new HashMap<>();
+                final Map<String, Map<String, Relationship>> rels = new HashMap<>();
+                GenericQueryJsonExportUtils.fillOutputMap(queryResult, nodesRes, rels);
+                resultsMap.put("nodes",nodesRes);
+                resultsMap.put("rels",rels);
+                return resultsMap;
+            });
         }
 
         return results;

@@ -173,4 +173,25 @@ public class PfElasticController {
         log.warn("HEADER group: {}", groups.toString());
         return elasticService.resolveExpandQuery(queries, limitNode, limitRel, groups).toString();
     }
+
+    @Operation(summary = "Search for entities in Elastic by ES queries, results are paginated" +
+            "and aggregated in terms of query logic")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Found Pfs and paths",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PfElastic.class)) }),
+            @ApiResponse(responseCode = "400", description = "Invalid searchType or pagination supplied",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "No results for the research",
+                    content = @Content) })
+    @PostMapping(path = "/elastic/v2/fill-out", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String getEntitiesByESExpandQueriesFillOut(
+            @RequestHeader List<String> groups,
+            @RequestBody List<QueryV3Api> queries,
+            @RequestParam(name = "limit_nodes") @Positive int limitNode,
+            @RequestParam(name = "limit_rel") @Positive int limitRel
+    ) {
+        log.warn("HEADER group: {}", groups.toString());
+        return elasticService.resolveExpandQueryFillOut(queries, limitNode, limitRel, groups).toString();
+    }
 }

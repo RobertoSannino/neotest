@@ -8,27 +8,23 @@ import it.larus.test.neotest.elastic.entity.PfElastic;
 import it.larus.test.neotest.elastic.repository.GenericElasticRepository;
 import it.larus.test.neotest.elastic.repository.PfElasticRepository;
 import it.larus.test.neotest.ogm.repository.GenericNeo4jRepository;
-import it.larus.test.neotest.util.ElasticUtils;
+import it.larus.test.neotest.util.*;
 import it.larus.test.neotest.api.v2.NodeQuery;
 import it.larus.test.neotest.api.v2.QueryV2Api;
 import it.larus.test.neotest.exception.BadRequestException;
 import it.larus.test.neotest.exception.NotFoundException;
-import it.larus.test.neotest.util.GenericQueryJsonExportUtils;
-import it.larus.test.neotest.util.PathExpander;
 import it.larus.test.neotest.validator.InputQueryValidator;
 import it.larus.test.neotest.validator.ParamValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.IterableUtils;
+import org.neo4j.driver.Result;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.validation.constraints.Positive;
 import java.text.MessageFormat;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiFunction;
 
 import static java.util.Objects.isNull;
@@ -171,6 +167,47 @@ public class PfElasticService {
 
         log.info("Path results: {}", paths);
         return paths;
+    }
+
+    public Map<String, Object> resolveExpandQueryFillOut(List<QueryV3Api> queries, int limitNode, int limitRel, List<String> groups) {
+        StringBuilder queryBuilder = new StringBuilder();
+        for (int i = 0; i < queries.size(); ++i) {
+            QueryV3Api queryV3Api = queries.get(i);
+            InputQueryValidator.isValid(queryV3Api);
+            ParamValidator.validateQueryV3Api_ExtendVersion(queryV3Api, groups);
+
+            queryV3Api.getRelQueries().forEach(
+                    rq -> {
+                        rq.setMinDepth(Optional.ofNullable(rq.getMinDepth()).orElse(1));
+                        rq.setMaxDepth(Optional.ofNullable(rq.getMaxDepth()).orElse(1));
+                    }
+            );
+
+            GenericElasticRepository ger = new GenericElasticRepository();
+            queryV3Api.getNodeQueries().forEach(nq -> nq.setIdsXonarRequired(nonNull(nq.getQuery())));
+
+            for (NodeQueryV3Api nodeQuery : queryV3Api.getNodeQueries()) {
+                if (nonNull(nodeQuery.getQuery())) {
+                    String indexName = ElasticUtils.getIndexForLabel(nodeQuery.getLabel());
+                    List<String> xonarIds = ger.getIdsFor(indexName, nodeQuery.getLabel(), nodeQuery.getQuery(), limitNode);
+                    log.info("IDs for {}-{}: {}", nodeQuery.getId(), nodeQuery.getLabel(), xonarIds);
+                    nodeQuery.setIdsXonar(xonarIds);
+                }
+            }
+
+            PathExpander expandPathUtil = new PathExpander();
+            String query = expandPathUtil.generateExpandPathQuery(queryV3Api, groups);
+            queryBuilder.append(query);
+            if (i != queries.size() - 1) {
+                queryBuilder.append("\nUNION\n");
+            }
+        }
+
+        String query = queryBuilder.toString();
+        log.info("Query created: {}", query);
+        GenericNeo4jRepository gnr = new GenericNeo4jRepository();
+        Map<String, Object> resultsMap =gnr.runCypherQueryFillOut(query);
+        return resultsMap;
     }
 
     private List<PfElastic> getPfBySearchType(String value, SearchType searchType, Pageable pageRequest,
