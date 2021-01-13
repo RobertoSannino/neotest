@@ -4,11 +4,9 @@ import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.internal.InternalNode;
+import org.neo4j.driver.internal.InternalPath;
 import org.neo4j.driver.internal.InternalRelationship;
-import org.neo4j.driver.internal.value.ListValue;
-import org.neo4j.driver.internal.value.NodeValue;
-import org.neo4j.driver.internal.value.PathValue;
-import org.neo4j.driver.internal.value.RelationshipValue;
+import org.neo4j.driver.internal.value.*;
 import org.neo4j.driver.types.Path;
 
 import java.util.ArrayList;
@@ -42,14 +40,16 @@ public class GenericQueryJsonExportUtils {
         throw new UnsupportedOperationException(ExportMode.NODES_AND_RELATIONSHIPS.name() + " not currently supported");
     }
 
-    public static void fillOutputMap(Result result, Map<String, Node> nodesRes, Map<String, Map<String, Relationship>> rels) {
-
+    public static void fillOutputMap(Result result, Map<String, Node> nodesRes, Map<String, Map<String, Relationship>> rels, Map<String, String> cons) {
         while (result.hasNext()) {
             Record record = result.next();
 
             record.keys().forEach(k -> {
                 Value v = record.get(k);
-                if (v instanceof ListValue) {
+                if (v instanceof StringValue) {
+                    cons.put(k, v.asString());
+                }
+                else if (v instanceof ListValue) {
                     v.asList().forEach( v_in_list ->
                             node_or_relation( v_in_list, nodesRes, rels )
                     );
@@ -132,21 +132,21 @@ public class GenericQueryJsonExportUtils {
             Relationship relation = new Relationship(
                     Long.toString(((InternalRelationship) v).id()),
                     ((InternalRelationship) v).type(),
-                    ((InternalRelationship)v).asMap()
-//                    new Node( Long.toString(((InternalRelationship) v).startNodeId()) ),
-//                    new Node( Long.toString(((InternalRelationship) v).endNodeId()) )
-//                    nodesRes.getOrDefault(
-//                            Long.toString(((InternalRelationship) v).startNodeId()),
-//                            new Node(
-//                                    Long.toString(((InternalRelationship) v).startNodeId())
-//                            )
-//                    ),
-//                    nodesRes.getOrDefault(
-//                            Long.toString(((InternalRelationship) v).endNodeId()),
-//                            new Node(
-//                                    Long.toString(((InternalRelationship) v).endNodeId())
-//                            )
-//                    )
+                    ((InternalRelationship)v).asMap(),
+                    new Node( Long.toString(((InternalRelationship) v).startNodeId()) ),
+                    new Node( Long.toString(((InternalRelationship) v).endNodeId()) )
+                    /*nodesRes.getOrDefault(
+                            Long.toString(((InternalRelationship) v).startNodeId()),
+                            new Node(
+                                    Long.toString(((InternalRelationship) v).startNodeId())
+                            )
+                    ),
+                    nodesRes.getOrDefault(
+                            Long.toString(((InternalRelationship) v).endNodeId()),
+                            new Node(
+                                    Long.toString(((InternalRelationship) v).endNodeId())
+                            )
+                    )*/
             );
 
             if( !rels.containsKey( Long.toString(((InternalRelationship) v).startNodeId()) ) ) {
@@ -174,6 +174,12 @@ public class GenericQueryJsonExportUtils {
             for (org.neo4j.driver.types.Relationship rel:path.relationships()) {
                 node_or_relation( rel, nodesRes, rels );
             }
+        }
+
+        else if (v instanceof InternalPath) {
+            InternalPath internalPath = (InternalPath) v;
+            internalPath.nodes().forEach(n -> node_or_relation(n, nodesRes, rels));
+            internalPath.relationships().forEach(r -> node_or_relation(r, nodesRes, rels));
         }
 
     }

@@ -57,9 +57,11 @@ public class GenericNeo4jRepository {
                 Map<String, Object> resultsMap = new HashMap<>();
                 final Map<String, Node> nodesRes = new HashMap<>();
                 final Map<String, Map<String, Relationship>> rels = new HashMap<>();
-                GenericQueryJsonExportUtils.fillOutputMap(queryResult, nodesRes, rels);
+                final Map<String, String> cons = new HashMap<>();
+                GenericQueryJsonExportUtils.fillOutputMap(queryResult, nodesRes, rels, cons);
                 resultsMap.put("nodes",nodesRes);
                 resultsMap.put("rels",rels);
+                resultsMap.put("cons",cons);
                 return resultsMap;
             });
         }
