@@ -170,7 +170,7 @@ public class PathExpander {
         }).collect(Collectors.toList());
 
         List<String> aggregatedIdsAndProps = groupByClause.getAggregate().stream().map(agg -> {
-           String idAndProp = agg.getId() + (nonNull(agg.getProperty()) ? agg.getProperty() : "");
+           String idAndProp = agg.getId() + (nonNull(agg.getProperty()) ? "." + agg.getProperty() : "");
 
            String alias = nonNull(agg.getAlias()) ? " AS " + agg.getAlias() : "";
 
