@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 
 public class ParamValidator {
@@ -65,6 +66,14 @@ public class ParamValidator {
         Optional<NodeQueryV3Api> firstStartNode = queryV3Api.getNodeQueries().stream().filter(nq -> nq.getId().equals(queryV3Api.getRelQueries().get(0).getStart())).findFirst();
         if (!firstStartNode.isPresent() || isNull(firstStartNode.get().getQuery())) {
             throw new BadRequestException("Starting node must have \"query\" populated");
+        }
+
+        if (isEmpty(queryV3Api.getRet()) && isNull(queryV3Api.getGroupByNode())) {
+            throw new BadRequestException("No return statement or group by clause provided");
+        }
+
+        if (isNotEmpty(queryV3Api.getRet()) && nonNull(queryV3Api.getGroupByNode())) {
+            throw new BadRequestException("Return statement and group by clause are mutually exclusive");
         }
 
         if (nonNull(queryV3Api.getGroupByNode())) {

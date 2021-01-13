@@ -13,6 +13,7 @@ import it.larus.test.neotest.api.v2.NodeQuery;
 import it.larus.test.neotest.api.v2.QueryV2Api;
 import it.larus.test.neotest.exception.BadRequestException;
 import it.larus.test.neotest.exception.NotFoundException;
+import it.larus.test.neotest.util.GenericQueryJsonExportUtils;
 import it.larus.test.neotest.util.PathExpander;
 import it.larus.test.neotest.validator.InputQueryValidator;
 import it.larus.test.neotest.validator.ParamValidator;
@@ -119,8 +120,8 @@ public class PfElasticService {
             query.append(" \n").append(gnr.generateMatchPath(rq.getId(), startNode, endNode, rq.getLabel(), rq.getMaxDepth()));
         }
 
-        query.append("\nRETURN " + (isNull(queryV3Api.getReturnCond()) ? " * " : queryV3Api.getReturnCond()));
-        query.append("\nLIMIT " + limitRel);
+        //query.append("\nRETURN " + (isNull(queryV3Api.getReturnCond()) ? " * " : queryV3Api.getReturnCond()));
+        //query.append("\nLIMIT " + limitRel);
 
         log.info("Query created: {}", query.toString());
         List<Map<String, Object>> paths = gnr.runCypherQuery(query.toString());
@@ -163,9 +164,10 @@ public class PfElasticService {
             }
         }
 
-        log.info("Query created: {}", queryBuilder.toString());
+        String query = GenericQueryJsonExportUtils.wrapWithExport(queryBuilder.toString(), GenericQueryJsonExportUtils.ExportMode.RESULT_ARRAY);
+        log.info("Query created: {}", query);
         GenericNeo4jRepository gnr = new GenericNeo4jRepository();
-        List<Map<String, Object>> paths = gnr.runCypherQuery(queryBuilder.toString());
+        List<Map<String, Object>> paths = gnr.runCypherQuery(query);
 
         log.info("Path results: {}", paths);
         return paths;

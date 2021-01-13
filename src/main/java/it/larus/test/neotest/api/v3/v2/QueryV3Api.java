@@ -12,7 +12,5 @@ public class QueryV3Api {
     List<RelQuery> relQueries;
     List<OrderByNode> orderByNodes;
     GroupByNodes groupByNode;
-
-    String returnCond;
-
+    List<ReturnStatement> ret;
 }

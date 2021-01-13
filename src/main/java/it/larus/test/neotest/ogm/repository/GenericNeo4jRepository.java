@@ -1,5 +1,6 @@
 package it.larus.test.neotest.ogm.repository;
 
+import com.google.gson.Gson;
 import it.larus.test.neotest.api.v2.NodeQuery;
 import it.larus.test.neotest.util.ElasticUtils;
 import lombok.extern.slf4j.Slf4j;

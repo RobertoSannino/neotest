@@ -1,10 +1,7 @@
 package it.larus.test.neotest.util;
 
 import it.larus.test.neotest.api.v2.RelQuery;
-import it.larus.test.neotest.api.v3.v2.GroupByNodes;
-import it.larus.test.neotest.api.v3.v2.NodeQueryV3Api;
-import it.larus.test.neotest.api.v3.v2.OrderByNode;
-import it.larus.test.neotest.api.v3.v2.QueryV3Api;
+import it.larus.test.neotest.api.v3.v2.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringSubstitutor;
 
@@ -39,6 +36,14 @@ public class PathExpander {
         return String.join(", ", union);
     }
 
+    private String getReturnStatement(List<ReturnStatement> returnStatement) {
+        List<String> idsAndProps = returnStatement.stream().map(retStatement -> {
+            return retStatement.getId() + (nonNull(retStatement.getProperty()) ? retStatement.getProperty() : "");
+        }).collect(Collectors.toList());
+
+        return "RETURN " + String.join(", ", idsAndProps);
+    }
+
     public String generateExpandPathQuery(QueryV3Api queryV3Api, List<String> groups) {
         String matchPaths = generateMatchPath(queryV3Api.getNodeQueries(), groups);
         String expandPaths = generateExpandPath(queryV3Api.getNodeQueries(), queryV3Api.getRelQueries(), groups);
@@ -47,7 +52,7 @@ public class PathExpander {
             q += "RETURN " + generateGroupBy(queryV3Api.getGroupByNode());
         }
         else {
-            q += "RETURN " + queryV3Api.getReturnCond();
+            q += getReturnStatement(queryV3Api.getRet());
         }
         if (nonNull(queryV3Api.getOrderByNodes())) {
             q += " ORDER BY ";

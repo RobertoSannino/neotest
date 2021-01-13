@@ -1,10 +1,7 @@
 package it.larus.test.neotest.validator;
 
 import it.larus.test.neotest.api.v2.RelQuery;
-import it.larus.test.neotest.api.v3.v2.GroupByNodes;
-import it.larus.test.neotest.api.v3.v2.NodeQueryV3Api;
-import it.larus.test.neotest.api.v3.v2.OrderByNode;
-import it.larus.test.neotest.api.v3.v2.QueryV3Api;
+import it.larus.test.neotest.api.v3.v2.*;
 import it.larus.test.neotest.exception.BadRequestException;
 
 import java.util.regex.Pattern;
@@ -67,6 +64,13 @@ public class InputQueryValidator {
         }
     }
 
+    private static void isValid(ReturnStatement returnStatement) {
+        if (nonNull(returnStatement)) {
+            isValid(returnStatement.getId());
+            isValid(returnStatement.getProperty());
+        }
+    }
+
     public static void isValid(QueryV3Api inputQuery) {
         if (nonNull(inputQuery.getNodeQueries())) {
             inputQuery.getNodeQueries().forEach(InputQueryValidator::isValid);
@@ -78,6 +82,12 @@ public class InputQueryValidator {
         if (nonNull(inputQuery.getOrderByNodes())) {
             inputQuery.getOrderByNodes().forEach(InputQueryValidator::isValid);
         }
+
+        if (nonNull(inputQuery.getRet())) {
+            inputQuery.getRet().forEach(InputQueryValidator::isValid);
+        }
+
         isValid(inputQuery.getGroupByNode());
     }
+
 }
