@@ -11,10 +11,7 @@ import org.apache.commons.text.StringSubstitutor;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
@@ -56,12 +53,12 @@ public class GenericNeo4jRepository {
                         parameters("message", query));
                 Map<String, Object> resultsMap = new HashMap<>();
                 final Map<String, Node> nodesRes = new HashMap<>();
-                final Map<String, Map<String, Relationship>> rels = new HashMap<>();
-                final Map<String, String> cons = new HashMap<>();
-                GenericQueryJsonExportUtils.fillOutputMap(queryResult, nodesRes, rels, cons);
+                final Map<String, Map<String, Map<String, Relationship>>> rels = new HashMap<>();
+                final Map<String, HashSet<String>> typesMap = new HashMap<>();
+                GenericQueryJsonExportUtils.fillOutputMap(queryResult, nodesRes, typesMap, rels);
                 resultsMap.put("nodes",nodesRes);
-                resultsMap.put("rels",rels);
-                resultsMap.put("cons",cons);
+                resultsMap.put("relationships",rels);
+                resultsMap.put("typesMap",typesMap);
                 return resultsMap;
             });
         }

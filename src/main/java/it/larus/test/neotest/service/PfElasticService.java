@@ -17,7 +17,6 @@ import it.larus.test.neotest.validator.InputQueryValidator;
 import it.larus.test.neotest.validator.ParamValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.IterableUtils;
-import org.neo4j.driver.Result;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,6 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.BiFunction;
 
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
@@ -126,7 +124,7 @@ public class PfElasticService {
         return paths;
     }
 
-    public List<Map<String, Object>> resolveExpandQuery(List<QueryV3Api> queries, int limitNode, int limitRel, List<String> groups) {
+    public List<String> resolveExpandQuery(List<QueryV3Api> queries, int limitNode, int limitRel, List<String> groups) {
         StringBuilder queryBuilder = new StringBuilder();
         for (int i = 0; i < queries.size(); ++i) {
             QueryV3Api queryV3Api = queries.get(i);
@@ -166,7 +164,9 @@ public class PfElasticService {
         List<Map<String, Object>> paths = gnr.runCypherQuery(query);
 
         log.info("Path results: {}", paths);
-        return paths;
+        String data = (String) paths.get(0).get("data");
+        List<String> split = Arrays.asList(data.split("\n"));
+        return split;
     }
 
     public Map<String, Object> resolveExpandQueryFillOut(List<QueryV3Api> queries, int limitNode, int limitRel, List<String> groups) {

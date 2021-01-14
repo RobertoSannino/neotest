@@ -38,7 +38,7 @@ public class PathExpander {
 
     private String getReturnStatement(List<ReturnStatement> returnStatement) {
         List<String> idsAndProps = returnStatement.stream().map(retStatement -> {
-            return retStatement.getId() + (nonNull(retStatement.getProperty()) ? retStatement.getProperty() : "");
+            return retStatement.getId() + (nonNull(retStatement.getProperty()) ? "." + retStatement.getProperty() : "");
         }).collect(Collectors.toList());
 
         return "RETURN " + String.join(", ", idsAndProps);
