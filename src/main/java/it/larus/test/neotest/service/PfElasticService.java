@@ -206,7 +206,7 @@ public class PfElasticService {
         String query = queryBuilder.toString();
         log.info("Query created: {}", query);
         GenericNeo4jRepository gnr = new GenericNeo4jRepository();
-        Map<String, Object> resultsMap =gnr.runCypherQueryFillOut(query);
+        Map<String, Object> resultsMap = gnr.runCypherQueryFillOut(query);
         return resultsMap;
     }
 

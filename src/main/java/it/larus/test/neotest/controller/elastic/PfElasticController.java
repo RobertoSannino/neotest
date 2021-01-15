@@ -1,5 +1,7 @@
 package it.larus.test.neotest.controller.elastic;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -190,8 +192,10 @@ public class PfElasticController {
             @RequestBody List<QueryV3Api> queries,
             @RequestParam(name = "limit_nodes") @Positive int limitNode,
             @RequestParam(name = "limit_rel") @Positive int limitRel
-    ) {
+    ) throws JsonProcessingException {
         log.warn("HEADER group: {}", groups.toString());
-        return elasticService.resolveExpandQueryFillOut(queries, limitNode, limitRel, groups).toString();
+        ObjectMapper mapper = new ObjectMapper();
+
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(elasticService.resolveExpandQueryFillOut(queries, limitNode, limitRel, groups));
     }
 }
